@@ -80,7 +80,7 @@ functions.cloudEvent("translateDocument", async (cloudEvent) => {
 
     const passthroughStream = new stream.PassThrough();
     passthroughStream.write(
-      translateDocumentResponse.documentTranslation.byteStreamOutputs
+      translateDocumentResponse.documentTranslation.byteStreamOutputs[0]
     );
     passthroughStream.end();
 
