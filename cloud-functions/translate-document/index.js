@@ -35,11 +35,12 @@ functions.cloudEvent("translateDocument", async (cloudEvent) => {
 
   const parent = `projects/${await translationClient.getProjectId()}`;
 
-  const detectLanguageContentSizeLimit = 204800 / 2;
+  // See https://cloud.google.com/translate/quotas#content
+  const detectLanguageContentSize = 5000;
 
   const [detectLanguageResponse] = await translationClient.detectLanguage({
     parent,
-    content: fileContents.substring(0, detectLanguageContentSizeLimit),
+    content: fileContents.substring(0, detectLanguageContentSize),
   });
 
   console.log("Detected languages", detectLanguageResponse);
