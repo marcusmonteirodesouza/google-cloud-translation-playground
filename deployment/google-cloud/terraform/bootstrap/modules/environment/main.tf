@@ -1,6 +1,10 @@
 locals {
   cloudbuild_sa_email = "${data.google_project.environment.number}@cloudbuild.gserviceaccount.com"
 
+  cloudbuild_sa_roles = [
+    "roles/cloudfunctions.admin"
+  ]
+
   cloud_function_buckets = {
     "translate-document" : "translate-document-cloud-function-${random_id.random.hex}",
   }
@@ -37,6 +41,14 @@ resource "google_cloudbuild_trigger" "push_to_branch_deployment" {
     _REGION                                                  = var.region
     _TRANSLATE_DOCUMENT_CLOUD_FUNCTION_SOURCE_ARCHIVE_BUCKET = local.cloud_function_buckets["translate-document"]
   }
+}
+
+# Cloud Build Service Account roles and permissions
+resource "google_project_iam_member" "cloudbuild_sa" {
+  for_each = toset(local.cloudbuild_sa_roles)
+  project  = var.project_id
+  role     = each.value
+  member   = "serviceAccount:${local.cloudbuild_sa_email}"
 }
 
 # Cloud Function Buckets

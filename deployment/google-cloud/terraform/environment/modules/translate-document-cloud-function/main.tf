@@ -45,7 +45,7 @@ resource "google_storage_bucket" "translation" {
   }
 }
 
-resource "google_cloudfunctions2_function" "send_email_ses" {
+resource "google_cloudfunctions2_function" "translate_document" {
   provider    = google-beta
   name        = "translate-document"
   location    = var.region
