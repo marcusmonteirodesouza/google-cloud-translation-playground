@@ -31,11 +31,35 @@ resource "null_resource" "copy_source_archive_object" {
     md5hash = data.google_storage_bucket_object.source_archive_object.md5hash
   }
 }
+
+# Translation GCS Bucket
+resource "google_storage_bucket" "translation" {
+  name          = "translations-${data.google_project.project.project_id}"
+  location      = var.region
+  force_destroy = true
+
+  uniform_bucket_level_access = true
+
+  versioning {
+    enabled = true
+  }
+}
+
 resource "google_cloudfunctions2_function" "send_email_ses" {
   provider    = google-beta
   name        = "translate-document"
   location    = var.region
   description = "Translates a document"
+
+  event_trigger {
+    trigger_region = var.region
+    event_type     = "google.cloud.storage.object.v1.finalized"
+    retry_policy   = "RETRY_POLICY_DO_NOT_RETRY"
+    event_filters {
+      attribute = "bucket"
+      value     = google_storage_bucket.translation.name
+    }
+  }
 
   build_config {
     runtime     = "nodejs16"

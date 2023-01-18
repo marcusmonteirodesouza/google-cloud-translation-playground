@@ -4,7 +4,7 @@ const Joi = require("joi");
 
 const translationClient = new TranslationServiceClient();
 
-functions.cloudEvent("translateDocuments", async (cloudEvent) => {
+functions.cloudEvent("translateDocument", async (cloudEvent) => {
   const customJoi = Joi.extend((joi) => {
     return {
       type: "stringArray",
