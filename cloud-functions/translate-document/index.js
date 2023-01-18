@@ -10,7 +10,6 @@ const translationClient = new TranslationServiceClient();
 functions.cloudEvent("translateDocument", async (cloudEvent) => {
   const envVarsSchema = Joi.object()
     .keys({
-      REGION: Joi.string().required(),
       TARGET_LANGUAGE_CODES: Joi.string().required(),
     })
     .unknown();
@@ -58,10 +57,10 @@ functions.cloudEvent("translateDocument", async (cloudEvent) => {
   );
 
   for (const targetLanguageCode of targetLanguageCodes) {
-    console.log(`Translating ${file.name} to ${targetLanguageCode}...`);
+    console.log(`Translating ${file.name} file to ${targetLanguageCode}...`);
     const [translateDocumentResponse] =
       await translationClient.translateDocument({
-        parent: translationClient.locationPath(projectId, envVars.REGION),
+        parent: translationClient.locationPath(projectId, "global"),
         documentInputConfig: {
           gcsSource: {
             inputUri: `gs://${file.bucket}/${file.name}`,
