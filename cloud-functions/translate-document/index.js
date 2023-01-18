@@ -43,7 +43,7 @@ functions.cloudEvent("translateDocument", async (cloudEvent) => {
     content: fileContents.substring(0, detectLanguageContentSize),
   });
 
-  const sourceLanguageCode = detectLanguageResponse.reduce((prev, current) =>
+  const sourceLanguageCode = detectLanguageResponse.languages.reduce((prev, current) =>
     prev.confidence > current.confidence ? prev : current
   )["languageCode"];
 
