@@ -34,8 +34,8 @@ resource "null_resource" "copy_source_archive_object" {
   }
 }
 
-# Translation GCS Bucket
-resource "google_storage_bucket" "translation" {
+# Document Translations GCS Bucket
+resource "google_storage_bucket" "document_translations" {
   name          = "document-translations-${data.google_project.project.project_id}"
   location      = var.region
   force_destroy = true
@@ -59,7 +59,7 @@ resource "google_cloudfunctions2_function" "translate_document" {
     retry_policy   = "RETRY_POLICY_DO_NOT_RETRY"
     event_filters {
       attribute = "bucket"
-      value     = google_storage_bucket.translation.name
+      value     = google_storage_bucket.document_translations.name
     }
   }
 
