@@ -1,13 +1,15 @@
 const functions = require("@google-cloud/functions-framework");
+const { Storage } = require("@google-cloud/storage");
 const { TranslationServiceClient } = require("@google-cloud/translate").v3beta1;
 const Joi = require("joi");
+
+const storage = new Storage();
 
 const translationClient = new TranslationServiceClient();
 
 functions.cloudEvent("translateDocument", async (cloudEvent) => {
   const envVarsSchema = Joi.object()
     .keys({
-      PROJECT_ID: Joi.string().required(),
       TARGET_LANGUAGE_CODES: Joi.string().required(),
     })
     .unknown();
@@ -20,14 +22,25 @@ functions.cloudEvent("translateDocument", async (cloudEvent) => {
     throw envVarsError;
   }
 
-  const projectId = envVars.PROJECT_ID;
-  const targetLanguageCodes = envVars.TARGET_LANGUAGE_CODES;
-
   const file = cloudEvent.data;
 
   console.log("Received file", file);
 
-  console.log("targetLanguageCodes", targetLanguageCodes);
+  const fileDownloadResponse = await storage
+    .bucket(file.bucket)
+    .file(file.name)
+    .download();
+
+  const fileContents = fileDownloadResponse.toString();
+
+  const parent = `projects/${await translationClient.getProjectId()}`;
+
+  const [detectLanguageResponse] = await translationClient.detectLanguage({
+    parent,
+    content: fileContents,
+  });
+
+  console.log("Detected languages", detectLanguageResponse);
 
   // const detectLangua
 
