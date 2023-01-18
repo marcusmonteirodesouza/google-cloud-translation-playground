@@ -34,7 +34,15 @@ resource "null_resource" "copy_source_archive_object" {
   }
 }
 
-# Document Translations GCS Bucket
+# GCS Buckets
+resource "google_storage_bucket" "translate_document" {
+  name          = "translate-document-${data.google_project.project.project_id}"
+  location      = var.region
+  force_destroy = true
+
+  uniform_bucket_level_access = true
+}
+
 resource "google_storage_bucket" "document_translations" {
   name          = "document-translations-${data.google_project.project.project_id}"
   location      = var.region
@@ -55,7 +63,7 @@ resource "google_cloudfunctions2_function" "translate_document" {
     retry_policy   = "RETRY_POLICY_DO_NOT_RETRY"
     event_filters {
       attribute = "bucket"
-      value     = google_storage_bucket.document_translations.name
+      value     = google_storage_bucket.translate_document.name
     }
   }
 
@@ -76,6 +84,7 @@ resource "google_cloudfunctions2_function" "translate_document" {
     timeout_seconds    = 60
 
     environment_variables = {
+      DOCUMENT_TRANSLATIONS_GCS_BUCKET = google_storage_bucket.document_translations.name
       TARGET_LANGUAGE_CODES = join(",", local.target_language_codes)
     }
   }

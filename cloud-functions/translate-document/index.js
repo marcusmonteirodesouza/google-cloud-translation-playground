@@ -12,6 +12,7 @@ const translationClient = new TranslationServiceClient();
 functions.cloudEvent("translateDocument", async (cloudEvent) => {
   const envVarsSchema = Joi.object()
     .keys({
+      DOCUMENT_TRANSLATIONS_GCS_BUCKET: Joi.string().required(),
       TARGET_LANGUAGE_CODES: Joi.string().required(),
     })
     .unknown();
@@ -30,9 +31,10 @@ functions.cloudEvent("translateDocument", async (cloudEvent) => {
 
   console.log("Received file", file);
 
-  const bucket = storage.bucket(file.bucket);
-
-  const fileDownloadResponse = await bucket.file(file.name).download();
+  const fileDownloadResponse = await storage
+    .bucket(file.bucket)
+    .file(file.name)
+    .download();
 
   const fileContents = fileDownloadResponse.toString();
 
@@ -74,9 +76,15 @@ functions.cloudEvent("translateDocument", async (cloudEvent) => {
 
     const parsedFilename = path.parse(file.name);
 
+    const translatedDocumentBucket = storage.bucket(
+      envVars.DOCUMENT_TRANSLATIONS_GCS_BUCKET
+    );
+
     const translatedDocumentFilename = `${parsedFilename.name}.${targetLanguageCode}${parsedFilename.ext}`;
 
-    const translatedDocumentFile = bucket.file(translatedDocumentFilename);
+    const translatedDocumentFile = translatedDocumentBucket.file(
+      translatedDocumentFilename
+    );
 
     const passthroughStream = new stream.PassThrough();
     passthroughStream.write(
@@ -90,6 +98,8 @@ functions.cloudEvent("translateDocument", async (cloudEvent) => {
         // The file upload is complete
       });
 
-    console.log(`${translatedDocumentFilename} uploaded to ${bucket.name}!`);
+    console.log(
+      `${translatedDocumentFilename} uploaded to ${translatedDocumentBucket.name}!`
+    );
   }
 });
