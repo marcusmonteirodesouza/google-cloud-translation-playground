@@ -35,10 +35,13 @@ functions.cloudEvent("translateDocuments", async (cloudEvent) => {
   }
 
   const projectId = envVars.PROJECT_ID;
+  const targetLanguageCodes = envVars.TARGET_LANGUAGE_CODES;
 
   const file = cloudEvent.data;
 
   console.log("Received file", file);
+
+  console.log("targetLanguageCodes", targetLanguageCodes);
 
   // const detectLangua
 

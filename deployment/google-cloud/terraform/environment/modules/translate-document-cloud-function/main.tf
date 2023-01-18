@@ -1,5 +1,9 @@
 locals {
   source_archive_object_with_md5hash = "${trimsuffix(var.source_archive_object, ".zip")}-${data.google_storage_bucket_object.source_archive_object.md5hash}.zip"
+
+  target_language_codes = [
+    "fr"
+  ]
 }
 
 data "google_project" "project" {
@@ -49,8 +53,8 @@ resource "google_cloudfunctions2_function" "send_email_ses" {
     timeout_seconds    = 60
 
     environment_variables = {
-      PROJECT_ID = data.google_project.project.project_id
-      AWS_REGION = var.target_language_code
+      PROJECT_ID            = data.google_project.project.project_id
+      TARGET_LANGUAGE_CODES = join(",", local.target_language_codes)
     }
   }
 
