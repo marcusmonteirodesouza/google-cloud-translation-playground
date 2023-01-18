@@ -3,7 +3,19 @@ locals {
 
   cloudbuild_sa_roles = [
     "roles/cloudfunctions.admin",
-    "roles/iam.serviceAccountUser"
+    "roles/eventarc.admin",
+    "roles/iam.serviceAccountUser",
+  ]
+
+  compute_sa_email = "${data.google_project.environment.number}-compute@developer.gserviceaccount.com"
+
+  compute_sa_roles = [
+  ]
+
+  gcs_sa_email = "service-${data.google_project.environment.number}@gs-project-accounts.iam.gserviceaccount.com"
+
+  gcs_sa_roles = [
+    "roles/pubsub.publisher"
   ]
 
   cloud_function_buckets = {
@@ -50,6 +62,22 @@ resource "google_project_iam_member" "cloudbuild_sa" {
   project  = var.project_id
   role     = each.value
   member   = "serviceAccount:${local.cloudbuild_sa_email}"
+}
+
+# Default Compute Service Account roles and permissions
+resource "google_project_iam_member" "compute_sa" {
+  for_each = toset(local.compute_sa_roles)
+  project  = var.project_id
+  role     = each.value
+  member   = "serviceAccount:${local.compute_sa_email}"
+}
+
+# Google Cloud Storage Service Account roles and permissions
+resource "google_project_iam_member" "gcs_sa" {
+  for_each = toset(local.gcs_sa_roles)
+  project  = var.project_id
+  role     = each.value
+  member   = "serviceAccount:${local.gcs_sa_email}"
 }
 
 # Cloud Function Buckets

@@ -5,24 +5,10 @@ const Joi = require("joi");
 const translationClient = new TranslationServiceClient();
 
 functions.cloudEvent("translateDocument", async (cloudEvent) => {
-  const customJoi = Joi.extend((joi) => {
-    return {
-      type: "stringArray",
-      base: joi.array(),
-      coerce(value, _helpers) {
-        return value.split ? value.split(",") : value;
-      },
-    };
-  });
-
-  const envVarsSchema = customJoi
-    .object()
+  const envVarsSchema = Joi.object()
     .keys({
-      PROJECT_ID: customJoi.string().required(),
-      TARGET_LANGUAGE_CODES: customJoi
-        .stringArray()
-        .items(customJoi.string())
-        .required(),
+      PROJECT_ID: Joi.string().required(),
+      TARGET_LANGUAGE_CODES: Joi.string().required(),
     })
     .unknown();
 
