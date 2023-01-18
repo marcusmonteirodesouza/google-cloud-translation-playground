@@ -1,3 +1,5 @@
+const path = require("path");
+const stream = require("stream");
 const functions = require("@google-cloud/functions-framework");
 const { Storage } = require("@google-cloud/storage");
 const { TranslationServiceClient } = require("@google-cloud/translate").v3beta1;
@@ -28,10 +30,9 @@ functions.cloudEvent("translateDocument", async (cloudEvent) => {
 
   console.log("Received file", file);
 
-  const fileDownloadResponse = await storage
-    .bucket(file.bucket)
-    .file(file.name)
-    .download();
+  const bucket = storage.bucket(file.bucket);
+
+  const fileDownloadResponse = await bucket.file(file.name).download();
 
   const fileContents = fileDownloadResponse.toString();
 
@@ -58,6 +59,7 @@ functions.cloudEvent("translateDocument", async (cloudEvent) => {
 
   for (const targetLanguageCode of targetLanguageCodes) {
     console.log(`Translating ${file.name} file to ${targetLanguageCode}...`);
+
     const [translateDocumentResponse] =
       await translationClient.translateDocument({
         parent: translationClient.locationPath(projectId, "global"),
@@ -69,6 +71,25 @@ functions.cloudEvent("translateDocument", async (cloudEvent) => {
         sourceLanguageCode,
         targetLanguageCode,
       });
-    console.log("translateDocumentResponse", translateDocumentResponse);
+
+    const parsedFilename = path.parse(file.name);
+
+    const translatedDocumentFilename = `${parsedFilename.name}.${targetLanguageCode}${parsedFilename.ext}`;
+
+    const translatedDocumentFile = bucket.file(translatedDocumentFilename);
+
+    const passthroughStream = new stream.PassThrough();
+    passthroughStream.write(
+      translateDocumentResponse.documentTranslation.byteStreamOutputs
+    );
+    passthroughStream.end();
+
+    passthroughStream
+      .pipe(translatedDocumentFile.createWriteStream())
+      .on("finish", () => {
+        // The file upload is complete
+      });
+
+    console.log(`${translatedDocumentFilename} uploaded to ${bucket.name}!`);
   }
 });
