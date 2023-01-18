@@ -38,6 +38,7 @@ steps:
         "-auto-approve",
       ]
     env:
+      - "TF_VAR_project_id=${PROJECT_ID}"
       - "TF_VAR_region=${_REGION}"
       - "TF_VAR_translate_document_cloud_function_source_archive_bucket=${_TRANSLATE_DOCUMENT_CLOUD_FUNCTION_SOURCE_ARCHIVE_BUCKET}"
       - "TF_VAR_translate_document_cloud_function_source_archive_object=translate-document-cloud-function.zip"
