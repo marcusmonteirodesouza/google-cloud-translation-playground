@@ -14,6 +14,7 @@ data "google_storage_bucket_object" "source_archive_object" {
   name   = var.source_archive_object
   bucket = var.source_archive_bucket
 }
+
 resource "google_storage_bucket" "source_archive_bucket_md5hash" {
   name                        = "${var.source_archive_bucket}-md5hash"
   location                    = var.region
@@ -23,6 +24,7 @@ resource "google_storage_bucket" "source_archive_bucket_md5hash" {
     enabled = true
   }
 }
+
 resource "null_resource" "copy_source_archive_object" {
   provisioner "local-exec" {
     command = "gcloud alpha storage cp gs://${var.source_archive_bucket}/${var.source_archive_object} ${google_storage_bucket.source_archive_bucket_md5hash.url}/${local.source_archive_object_with_md5hash} --quiet"
@@ -34,7 +36,7 @@ resource "null_resource" "copy_source_archive_object" {
 
 # Translation GCS Bucket
 resource "google_storage_bucket" "translation" {
-  name          = "translations-${data.google_project.project.project_id}"
+  name          = "document-translations-${data.google_project.project.project_id}"
   location      = var.region
   force_destroy = true
 
