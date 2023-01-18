@@ -2,6 +2,7 @@ locals {
   source_archive_object_with_md5hash = "${trimsuffix(var.source_archive_object, ".zip")}-${data.google_storage_bucket_object.source_archive_object.md5hash}.zip"
 
   target_language_codes = [
+    "en",
     "fr"
   ]
 }

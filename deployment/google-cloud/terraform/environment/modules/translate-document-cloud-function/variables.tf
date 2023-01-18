@@ -12,8 +12,3 @@ variable "source_archive_object" {
   type        = string
   description = "The source archive object (file) in archive bucket."
 }
-
-variable "target_language_codes" {
-  type        = list(string)
-  description = "The codes of the target languages to which the document will be translated to. See https://cloud.google.com/translate/docs/languages."
-}
