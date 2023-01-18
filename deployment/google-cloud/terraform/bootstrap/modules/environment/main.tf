@@ -64,3 +64,11 @@ resource "google_storage_bucket_iam_member" "cloudbuild_sa_cloud_functions_stora
     google_storage_bucket.cloud_functions
   ]
 }
+
+# Cloud Build Community Builders
+resource "null_resource" "submit_community_builders" {
+  provisioner "local-exec" {
+    command     = "./submit-community-builders.sh ${var.project_id}"
+    working_dir = "${path.module}/scripts"
+  }
+}

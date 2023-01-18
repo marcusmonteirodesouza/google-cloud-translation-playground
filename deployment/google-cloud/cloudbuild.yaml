@@ -1,10 +1,12 @@
 steps:
-  - name: ubuntu
-    script: |
-      #!/usr/bin/env bash
-      sudo apt update
-      sudo apt get zip
-      zip -r 'translate-document.zip' 'index.js' 'package.json' 'package-lock.json'
+  - name: gcr.io/$PROJECT_ID/zip
+    args: [
+      "-r",
+      "translate-document.zip",
+      "index.js",
+      "package.json",
+      "package-lock.json"
+    ]
     dir: cloud-functions/translate-document
     id: translate-document-cloud-function-zip
     waitFor: ["-"]
