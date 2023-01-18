@@ -3,7 +3,7 @@ steps:
     args:
       [
         "-r",
-        "translate-document.zip",
+        "translate-document-cloud-function.zip",
         "index.js",
         "package.json",
         "package-lock.json",
@@ -17,8 +17,8 @@ steps:
         "alpha",
         "storage",
         "cp",
-        "translate-document.zip",
-        "gs://${_TRANSLATE_DOCUMENT_CLOUD_FUNCTION_SOURCE_ARCHIVE_BUCKET}/translate-document.zip",
+        "translate-document-cloud-function.zip",
+        "gs://${_TRANSLATE_DOCUMENT_CLOUD_FUNCTION_SOURCE_ARCHIVE_BUCKET}/translate-document-cloud-function.zip",
         "--quiet",
       ]
     dir: cloud-functions/translate-document
