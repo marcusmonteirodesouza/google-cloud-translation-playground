@@ -13,4 +13,5 @@ module "translate_document_cloud_function" {
   region                = var.region
   source_archive_bucket = var.translate_document_cloud_function_source_archive_bucket
   source_archive_object = var.translate_document_cloud_function_source_archive_object
+  target_language_codes = var.target_language_codes
 }
