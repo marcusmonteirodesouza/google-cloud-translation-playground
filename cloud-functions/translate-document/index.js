@@ -43,38 +43,32 @@ functions.cloudEvent("translateDocument", async (cloudEvent) => {
     content: fileContents.substring(0, detectLanguageContentSize),
   });
 
-  console.log("Detected languages", detectLanguageResponse);
+  const sourceLanguageCode = detectLanguageResponse.reduce((prev, current) =>
+    prev.confidence > current.confidence ? prev : current
+  )["languageCode"];
 
-  // const detectLangua
+  console.log(
+    `Detected the ${file.name} file languageCode:`,
+    sourceLanguageCode
+  );
 
-  // const [detectLanguageResponse] = await translationClient.detectLanguage()
+  const targetLanguageCodes = envVars.TARGET_LANGUAGE_CODES.split(",").filter(
+    (languageCode) => languageCode !== sourceLanguageCode
+  );
 
-  // const documentInputConfig = {
-  //   gcsSource: {
-  //     inputUri: inputUri,
-  //   },
-  // };
-
-  // const request = {
-  //   parent: translationClient.locationPath(projectId, location),
-  //   documentInputConfig: documentInputConfig,
-  //   sourceLanguageCode: 'en-US',
-  //   targetLanguageCode: 'sr-Latn',
-  // };
-
-  // // Run request
-  // const [response] = await translationClient.translateDocument(request);
-
-  // console.log(
-  //   `Response: Mime Type - ${response.documentTranslation.mimeType}`
-  // );
-
-  // console.log(`Event ID: ${cloudEvent.id}`);
-  // console.log(`Event Type: ${cloudEvent.type}`);
-
-  // console.log(`Bucket: ${file.bucket}`);
-  // console.log(`File: ${file.name}`);
-  // console.log(`Metageneration: ${file.metageneration}`);
-  // console.log(`Created: ${file.timeCreated}`);
-  // console.log(`Updated: ${file.updated}`);
+  for (const targetLanguageCode of targetLanguageCodes) {
+    console.log(`Translating ${file.name} to ${targetLanguageCode}...`);
+    const [translateDocumentResponse] =
+      await translationClient.translateDocument({
+        parent,
+        documentInputConfig: {
+          gcsSource: {
+            inputUri: `gs://${file.bucket}/${file.name}`,
+          },
+        },
+        sourceLanguageCode,
+        targetLanguageCode,
+      });
+    console.log("translateDocumentResponse", translateDocumentResponse);
+  }
 });

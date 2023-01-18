@@ -41,10 +41,6 @@ resource "google_storage_bucket" "document_translations" {
   force_destroy = true
 
   uniform_bucket_level_access = true
-
-  versioning {
-    enabled = true
-  }
 }
 
 resource "google_cloudfunctions2_function" "translate_document" {
@@ -80,7 +76,6 @@ resource "google_cloudfunctions2_function" "translate_document" {
     timeout_seconds    = 60
 
     environment_variables = {
-      PROJECT_ID            = data.google_project.project.project_id
       TARGET_LANGUAGE_CODES = join(",", local.target_language_codes)
     }
   }
