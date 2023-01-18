@@ -1,5 +1,5 @@
 steps:
-  - name: bash
+  - name: ubuntu
     script: |
       #!/usr/bin/env bash
       zip -r 'translate-document.zip' 'index.js' 'package.json' 'package-lock.json'
