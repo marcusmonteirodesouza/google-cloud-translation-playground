@@ -1,0 +1,20 @@
+steps:
+  - name: bash
+    script: |
+      #!/usr/bin/env bash
+      zip -r 'translate-document.zip' 'index.js' 'package.json' 'package-lock.json'
+    dir: cloud-functions/translate-document
+    id: translate-document-cloud-function-zip
+    waitFor: ["-"]
+  - name: gcr.io/cloud-builders/gcloud
+    args:
+      [
+        "alpha",
+        "storage",
+        "cp",
+        "translate-document.zip",
+        "gs://${_TRANSLATE_DOCUMENT_CLOUD_FUNCTION_SOURCE_ARCHIVE_BUCKET}/translate-document.zip",
+        "--quiet",
+      ]
+    dir: cloud-functions/translate-document
+    waitFor: ["translate-document-cloud-function-zip"]

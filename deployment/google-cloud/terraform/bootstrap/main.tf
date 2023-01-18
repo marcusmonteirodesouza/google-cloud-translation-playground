@@ -24,3 +24,13 @@ resource "google_secret_manager_secret_version" "tfvars" {
   secret      = google_secret_manager_secret.tfvars.id
   secret_data = file("${path.module}/terraform.tfvars")
 }
+
+module "environment" {
+  source = "./modules/environment"
+
+  project_id      = module.project.project_id
+  region          = var.region
+  tfstate_bucket  = module.project.tfstate_bucket
+  sourcerepo_name = var.sourcerepo_name
+  branch_name     = var.branch_name
+}
