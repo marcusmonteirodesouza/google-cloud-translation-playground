@@ -10,6 +10,7 @@ const translationClient = new TranslationServiceClient();
 functions.cloudEvent("translateDocument", async (cloudEvent) => {
   const envVarsSchema = Joi.object()
     .keys({
+      REGION: Joi.string().required(),
       TARGET_LANGUAGE_CODES: Joi.string().required(),
     })
     .unknown();
@@ -22,6 +23,8 @@ functions.cloudEvent("translateDocument", async (cloudEvent) => {
     throw envVarsError;
   }
 
+  const projectId = await translationClient.getProjectId();
+
   const file = cloudEvent.data;
 
   console.log("Received file", file);
@@ -33,18 +36,16 @@ functions.cloudEvent("translateDocument", async (cloudEvent) => {
 
   const fileContents = fileDownloadResponse.toString();
 
-  const parent = `projects/${await translationClient.getProjectId()}`;
-
   // See https://cloud.google.com/translate/quotas#content
   const detectLanguageContentSize = 5000;
 
   const [detectLanguageResponse] = await translationClient.detectLanguage({
-    parent,
+    parent: `projects/${projectId}`,
     content: fileContents.substring(0, detectLanguageContentSize),
   });
 
-  const sourceLanguageCode = detectLanguageResponse.languages.reduce((prev, current) =>
-    prev.confidence > current.confidence ? prev : current
+  const sourceLanguageCode = detectLanguageResponse.languages.reduce(
+    (prev, current) => (prev.confidence > current.confidence ? prev : current)
   )["languageCode"];
 
   console.log(
@@ -60,7 +61,7 @@ functions.cloudEvent("translateDocument", async (cloudEvent) => {
     console.log(`Translating ${file.name} to ${targetLanguageCode}...`);
     const [translateDocumentResponse] =
       await translationClient.translateDocument({
-        parent,
+        parent: translationClient.locationPath(projectId, envVars.REGION),
         documentInputConfig: {
           gcsSource: {
             inputUri: `gs://${file.bucket}/${file.name}`,

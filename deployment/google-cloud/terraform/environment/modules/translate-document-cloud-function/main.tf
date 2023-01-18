@@ -76,6 +76,7 @@ resource "google_cloudfunctions2_function" "translate_document" {
     timeout_seconds    = 60
 
     environment_variables = {
+      REGION                = var.region,
       TARGET_LANGUAGE_CODES = join(",", local.target_language_codes)
     }
   }
