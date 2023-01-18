@@ -14,7 +14,6 @@ steps:
   - name: gcr.io/cloud-builders/gcloud
     args:
       [
-        "alpha",
         "storage",
         "cp",
         "translate-document-cloud-function.zip",

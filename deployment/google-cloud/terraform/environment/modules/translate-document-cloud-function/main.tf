@@ -27,7 +27,7 @@ resource "google_storage_bucket" "source_archive_bucket_md5hash" {
 
 resource "null_resource" "copy_source_archive_object" {
   provisioner "local-exec" {
-    command = "gcloud alpha storage cp gs://${var.source_archive_bucket}/${var.source_archive_object} ${google_storage_bucket.source_archive_bucket_md5hash.url}/${local.source_archive_object_with_md5hash} --quiet"
+    command = "gcloud storage cp gs://${var.source_archive_bucket}/${var.source_archive_object} ${google_storage_bucket.source_archive_bucket_md5hash.url}/${local.source_archive_object_with_md5hash} --quiet"
   }
   triggers = {
     md5hash = data.google_storage_bucket_object.source_archive_object.md5hash

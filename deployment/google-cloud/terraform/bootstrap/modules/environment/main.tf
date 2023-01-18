@@ -2,7 +2,8 @@ locals {
   cloudbuild_sa_email = "${data.google_project.environment.number}@cloudbuild.gserviceaccount.com"
 
   cloudbuild_sa_roles = [
-    "roles/cloudfunctions.admin"
+    "roles/cloudfunctions.admin",
+    "roles/iam.serviceAccountUser"
   ]
 
   cloud_function_buckets = {
