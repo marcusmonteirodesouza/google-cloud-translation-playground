@@ -1,10 +1,5 @@
 locals {
   source_archive_object_with_md5hash = "${trimsuffix(var.source_archive_object, ".zip")}-${data.google_storage_bucket_object.source_archive_object.md5hash}.zip"
-
-  target_language_codes = [
-    "en",
-    "fr"
-  ]
 }
 
 data "google_project" "project" {
@@ -85,7 +80,7 @@ resource "google_cloudfunctions2_function" "translate_document" {
 
     environment_variables = {
       DOCUMENT_TRANSLATIONS_GCS_BUCKET = google_storage_bucket.document_translations.name
-      TARGET_LANGUAGE_CODES = join(",", local.target_language_codes)
+      TARGET_LANGUAGE_CODES            = var.target_language_codes
     }
   }
 

@@ -20,6 +20,11 @@ variable "region" {
   description = "The default region in which resources will be created."
 }
 
+variable "target_language_codes" {
+  type        = list(string)
+  description = "The codes of the target languages to which documents will be translated to. See https://cloud.google.com/translate/docs/languages."
+}
+
 variable "sourcerepo_name" {
   type        = string
   description = "The Cloud Source Repository name."

@@ -1,6 +1,6 @@
 terraform {
   backend "gcs" {
-    bucket = "rationally-deadly-accurate-duck"
+    # bucket = ""
     prefix = "bootstrap"
   }
 }
