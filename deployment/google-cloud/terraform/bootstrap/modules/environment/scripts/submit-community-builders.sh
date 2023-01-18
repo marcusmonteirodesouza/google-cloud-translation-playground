@@ -10,8 +10,14 @@ cd "$PROJECT" || exit 1
 
 git clone https://github.com/GoogleCloudPlatform/cloud-builders-community.git
 
-# zip
+# terraform
+pushd cloud-builders-community/terraform || exit 1
 
+gcloud builds submit --project "$PROJECT" --substitutions=_TERRAFORM_VERSION="1.3.7",_TERRAFORM_VERSION_SHA256SUM="b8cf184dee15dfa89713fe56085313ab23db22e17284a9a27c0999c67ce3021e" .
+
+popd || exit 1
+
+# zip
 pushd cloud-builders-community/zip || exit 1
 
 gcloud builds submit --project "$PROJECT" .
