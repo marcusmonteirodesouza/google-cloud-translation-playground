@@ -5,9 +5,40 @@ services:
     ports:
       - ${PORT}:${PORT}
     environment:
+      - PROJECT_ID=${PROJECT_ID}
       - FIRESTORE_EMULATOR_HOST=firestore_emulator:${FIRESTORE_EMULATOR_PORT}
-      - FIRESTORE_PROJECT_ID=${FIRESTORE_PROJECT_ID}
+      - GCS_EMULATOR_HOST=gcs_emulator:${GCS_EMULATOR_PORT}
       - PORT=${PORT}
-      - JWT_SECRET_KEY=${JWT_SECRET_KEY}
-      - JWT_ISSUER=${JWT_ISSUER}
-      - JWT_SECONDS_TO_EXPIRATION=${JWT_SECONDS_TO_EXPIRATION}
+      - TRANSLATE_DOCUMENTS_SUPPORTED_LANGUAGES=${TRANSLATE_DOCUMENTS_SUPPORTED_LANGUAGES}
+      - TRANSLATE_DOCUMENTS_GCS_BUCKETS=${TRANSLATE_DOCUMENTS_GCS_BUCKETS}
+    depends_on:
+      firestore_emulator:
+        condition: service_healthy
+  firestore_emulator:
+    image: 'mtlynch/firestore-emulator'
+    ports:
+      - ${FIRESTORE_EMULATOR_PORT}:${FIRESTORE_EMULATOR_PORT}
+    environment:
+      - FIRESTORE_PROJECT_ID=${PROJECT_ID}
+      - PORT=${FIRESTORE_EMULATOR_PORT}
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'curl',
+          '-f',
+          'http://firestore_emulator:${FIRESTORE_EMULATOR_PORT}',
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+  gcs_emulator:
+    image: 'fsouza/fake-gcs-server'
+    ports:
+      - ${GCS_EMULATOR_PORT}:${GCS_EMULATOR_PORT}
+    healthcheck:
+      test:
+        ['CMD', 'curl', '-f', 'http://gcs_emulator:${FIRESTORE_EMULATOR_PORT}']
+      interval: 5s
+      timeout: 5s
+      retries: 10
