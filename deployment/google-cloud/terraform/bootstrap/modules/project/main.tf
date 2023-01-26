@@ -5,6 +5,7 @@ locals {
     "cloudfunctions.googleapis.com",
     "cloudresourcemanager.googleapis.com",
     "eventarc.googleapis.com",
+    "firestore.googleapis.com",
     "pubsub.googleapis.com",
     "run.googleapis.com",
     "secretmanager.googleapis.com",

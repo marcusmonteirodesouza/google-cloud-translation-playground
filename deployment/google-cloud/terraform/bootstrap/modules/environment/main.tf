@@ -52,7 +52,6 @@ resource "google_cloudbuild_trigger" "push_to_branch_deployment" {
   substitutions = {
     _TFSTATE_BUCKET                                          = var.tfstate_bucket
     _REGION                                                  = var.region
-    _TARGET_LANGUAGE_CODES                                   = join(",", var.target_language_codes)
     _TRANSLATE_DOCUMENT_CLOUD_FUNCTION_SOURCE_ARCHIVE_BUCKET = local.cloud_function_buckets["translate-document"]
   }
 }
@@ -79,6 +78,13 @@ resource "google_project_iam_member" "gcs_sa" {
   project  = var.project_id
   role     = each.value
   member   = "serviceAccount:${local.gcs_sa_email}"
+}
+
+# Only a project's Owner can create App Engine applications https://cloud.google.com/appengine/docs/standard/python/roles#primitive_roles
+resource "google_app_engine_application" "firestore" {
+  project       = var.project_id
+  location_id   = var.region
+  database_type = "CLOUD_FIRESTORE"
 }
 
 # Cloud Function Buckets

@@ -12,7 +12,7 @@ class TranslationRouter {
     router.post(
       '/upload',
       celebrate({
-        [Segments.QUERY]: Joi.object()
+        [Segments.BODY]: Joi.object()
           .keys({
             targetLanguageCode: Joi.string().required(),
           })
@@ -24,20 +24,21 @@ class TranslationRouter {
             throw new RangeError('no files were uploaded');
           }
 
-          console.log('uploaded files', req.files);
+          console.log('req.body', req.body);
+          console.log('req.files', req.files);
 
           for (const filesKey of Object.keys(req.files)) {
             const uploadedFile = req.files[filesKey];
 
             if ('name' in uploadedFile && 'data' in uploadedFile) {
-              const translationJobId =
+              const translationJob =
                 await this.translationService.createTranslationJob({
-                  targetLanguageCode: req.query.targetLanguageCode as string,
+                  targetLanguageCode: req.body.targetLanguageCode as string,
                   fileName: uploadedFile.name,
                   data: uploadedFile.data,
                 });
 
-              res.status(StatusCodes.CREATED).json({translationJobId});
+              res.status(StatusCodes.CREATED).json(translationJob);
             } else {
               throw new Error(
                 "the uploaded file should contain the 'name' and 'data' properties."
