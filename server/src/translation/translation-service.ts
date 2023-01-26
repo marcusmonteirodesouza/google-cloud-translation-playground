@@ -82,6 +82,28 @@ class TranslationService {
       ...translationJobDocumentData,
     };
   }
+
+  async getTranslationJob(
+    translationJobId: string
+  ): Promise<TranslationJob | undefined> {
+    const translationJobDoc = await this.firestore
+      .doc(`${this.translationJobsCollection}/${translationJobId}`)
+      .get();
+
+    const translationJobDocData = translationJobDoc.data();
+
+    if (!translationJobDocData) {
+      return;
+    }
+
+    return {
+      id: translationJobDoc.id,
+      status: translationJobDocData.status,
+      targetLanguageCode: translationJobDocData.targetLanguageCode,
+      fileName: translationJobDocData.fileName,
+      translatedFileName: translationJobDocData.translatedFileName,
+    };
+  }
 }
 
 export {TranslationService};

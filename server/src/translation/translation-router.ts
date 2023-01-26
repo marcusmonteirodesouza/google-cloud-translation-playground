@@ -10,7 +10,7 @@ class TranslationRouter {
     const router = Router();
 
     router.post(
-      '/upload',
+      '/translation-jobs',
       celebrate({
         [Segments.BODY]: Joi.object()
           .keys({
@@ -20,12 +20,14 @@ class TranslationRouter {
       }),
       async (req, res, next) => {
         try {
+          console.log('req.body', req.body);
+          console.log('req.files', req.files);
+
+          const {targetLanguageCode} = req.body;
+
           if (!req.files || Object.keys(req.files).length === 0) {
             throw new RangeError('no files were uploaded');
           }
-
-          console.log('req.body', req.body);
-          console.log('req.files', req.files);
 
           for (const filesKey of Object.keys(req.files)) {
             const uploadedFile = req.files[filesKey];
@@ -33,7 +35,7 @@ class TranslationRouter {
             if ('name' in uploadedFile && 'data' in uploadedFile) {
               const translationJob =
                 await this.translationService.createTranslationJob({
-                  targetLanguageCode: req.body.targetLanguageCode as string,
+                  targetLanguageCode,
                   fileName: uploadedFile.name,
                   data: uploadedFile.data,
                 });
@@ -46,10 +48,24 @@ class TranslationRouter {
             }
           }
         } catch (err) {
-          next(err);
+          return next(err);
         }
       }
     );
+
+    router.get('/translation-jobs/:id', async (req, res, next) => {
+      try {
+        const {id: translationJobId} = req.params;
+
+        const translationJob = await this.translationService.getTranslationJob(
+          translationJobId
+        );
+
+        return res.json(translationJob);
+      } catch (err) {
+        return next(err);
+      }
+    });
 
     return router;
   }
