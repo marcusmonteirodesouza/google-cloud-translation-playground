@@ -67,6 +67,28 @@ class TranslationRouter {
       }
     });
 
+    router.get('translation-jobs/:id/download', async (req, res, next) => {
+      try {
+        const {id: translationJobId} = req.params;
+
+        const translatedFile = await this.translationService.getTranslatedFile(
+          translationJobId
+        );
+
+        translatedFile
+          .createReadStream()
+          .on('error', err => {
+            throw err;
+          })
+          .on('end', () => {
+            res.end();
+          })
+          .pipe(res);
+      } catch (err) {
+        next(err);
+      }
+    });
+
     return router;
   }
 }

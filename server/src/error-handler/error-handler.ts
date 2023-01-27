@@ -2,6 +2,7 @@ import * as util from 'util';
 import {Response} from 'express';
 import {isCelebrateError} from 'celebrate';
 import {StatusCodes} from 'http-status-codes';
+import {NotFoundError} from '../errors';
 
 class ErrorsDto {
   public readonly errors;
@@ -29,6 +30,12 @@ class ErrorHandler {
     if (error instanceof RangeError) {
       return res
         .status(StatusCodes.UNPROCESSABLE_ENTITY)
+        .json(new ErrorsDto([error.message]));
+    }
+
+    if (error instanceof NotFoundError) {
+      return res
+        .status(StatusCodes.NOT_FOUND)
         .json(new ErrorsDto([error.message]));
     }
 

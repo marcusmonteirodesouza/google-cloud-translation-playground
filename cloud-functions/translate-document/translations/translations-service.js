@@ -54,7 +54,7 @@ class TranslationsService {
       throw new NotFoundError(`translation job ${fileName} not found`);
     }
 
-    const translatedFile = await this.translateAndUploadFile(
+    await this.translateAndUploadFile(
       fileName,
       translationJobDocData.translatedFileName,
       translationJobDocData.targetLanguageCode
@@ -62,7 +62,6 @@ class TranslationsService {
 
     await translationJobDocRef.update({
       status: 'Done',
-      translatedFileUrl: translatedFile.publicUrl,
     });
   }
 
@@ -112,8 +111,6 @@ class TranslationsService {
       .on('finish', () => {
         // The file upload is complete
       });
-
-    return translatedDocumentFile;
   }
 
   async #detectLanguage(content) {

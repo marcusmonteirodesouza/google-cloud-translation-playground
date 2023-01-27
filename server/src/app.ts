@@ -14,7 +14,6 @@ app.use(fileUpload());
 
 const firestore = new Firestore({
   projectId: config.projectId,
-  ignoreUndefinedProperties: true,
 });
 
 const storage = new Storage({
@@ -26,6 +25,7 @@ const translationService = new TranslationService({
   firestore,
   storage,
   translateDocumentsGCSBucket: config.translateDocumentsGCSBucket,
+  translatedDocumentsGCSBucket: config.translatedDocumentsGCSBucket,
 });
 
 const translationRouter = new TranslationRouter(translationService).router;
