@@ -1,4 +1,5 @@
 import path from 'path';
+import {pipeline} from 'stream/promises';
 import stream from 'stream';
 import {Firestore} from '@google-cloud/firestore';
 import {Storage} from '@google-cloud/storage';
@@ -89,9 +90,7 @@ class TranslationsService {
     passthroughStream.write(createTranslationJobArgs.data);
     passthroughStream.end();
 
-    passthroughStream.pipe(gcsFile.createWriteStream()).on('finish', () => {
-      // The file upload is complete
-    });
+    await pipeline(passthroughStream, gcsFile.createWriteStream());
 
     console.log(`${gcsFile.name} uploaded to ${gcsBucket.name}!`);
 
@@ -136,16 +135,23 @@ class TranslationsService {
       );
     }
 
+    const parsedFileName = path.parse(translationJob.fileName);
+
+    const gcsBucketTranslatedFileName = `${translationJobId}${parsedFileName.ext}`;
+
     const [file] = await this.storage
       .bucket(this.translatedDocumentsGCSBucket)
-      .file(translationJob.translatedFileName)
+      .file(gcsBucketTranslatedFileName)
       .get();
 
     if (!(await file.exists())) {
       throw new NotFoundError('file does not exist');
     }
 
-    return file;
+    return {
+      file,
+      translatedFileName: translationJob.translatedFileName,
+    };
   }
 }
 

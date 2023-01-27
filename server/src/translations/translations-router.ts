@@ -86,13 +86,16 @@ class TranslationsRouter {
           translationJobId
         );
 
-        res.setHeader('Content-Type', translatedFile.metadata['contentType']);
+        res.setHeader(
+          'Content-Type',
+          translatedFile.file.metadata['contentType']
+        );
         res.setHeader(
           'Content-Disposition',
-          `attachment; filename="${translatedFile.name}"`
+          `attachment; filename="${translatedFile.translatedFileName}"`
         );
 
-        translatedFile
+        translatedFile.file
           .createReadStream()
           .on('error', err => {
             throw err;

@@ -71,10 +71,7 @@ class TranslationsService {
       );
     }
 
-    await this.#uploadFile(
-      translationJobDocData.translatedFileName,
-      translatedDocumentStream
-    );
+    await this.#uploadFile(fileName, translatedDocumentStream);
 
     await translationJobDocRef.update({
       status: 'Done',
