@@ -51,7 +51,7 @@ class TranslationsService {
     const translationJobDocData = (await translationJobDocRef.get()).data();
 
     if (!translationJobDocData) {
-      throw new NotFoundError(`translation job ${fileName} not found`);
+      throw new NotFoundError(`translation job ${translationJobId} not found`);
     }
 
     await this.translateAndUploadFile(
