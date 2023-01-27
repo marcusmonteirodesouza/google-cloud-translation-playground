@@ -2,7 +2,7 @@ import express from 'express';
 import fileUpload from 'express-fileupload';
 import {Firestore} from '@google-cloud/firestore';
 import {Storage} from '@google-cloud/storage';
-import {TranslationService, TranslationRouter} from './translation';
+import {TranslationsService, TranslationsRouter} from './translations';
 import {errorHandler} from './error-handler';
 import {config} from './config';
 
@@ -21,16 +21,16 @@ const storage = new Storage({
   apiEndpoint: config.gcsApiEndpoint,
 });
 
-const translationService = new TranslationService({
+const translationsService = new TranslationsService({
   firestore,
   storage,
   translateDocumentsGCSBucket: config.translateDocumentsGCSBucket,
   translatedDocumentsGCSBucket: config.translatedDocumentsGCSBucket,
 });
 
-const translationRouter = new TranslationRouter(translationService).router;
+const translationsRouter = new TranslationsRouter(translationsService).router;
 
-app.use(translationRouter);
+app.use(translationsRouter);
 
 app.use(
   async (

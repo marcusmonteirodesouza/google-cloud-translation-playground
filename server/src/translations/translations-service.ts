@@ -6,7 +6,7 @@ import {TranslationJob} from './translation-job';
 import {TranslationJobStatus} from './translation-job-status';
 import {NotFoundError} from '../errors';
 
-interface TranslationServiceDeps {
+interface TranslationsServiceDeps {
   firestore: Firestore;
   storage: Storage;
   translateDocumentsGCSBucket: string;
@@ -19,7 +19,7 @@ interface CreateTranslationJobArgs {
   data: Buffer;
 }
 
-class TranslationService {
+class TranslationsService {
   private readonly firestore: Firestore;
   private readonly storage: Storage;
   private readonly translateDocumentsGCSBucket: string;
@@ -27,7 +27,7 @@ class TranslationService {
 
   private translationJobsCollection = 'translation-jobs';
 
-  constructor(deps: TranslationServiceDeps) {
+  constructor(deps: TranslationsServiceDeps) {
     this.firestore = deps.firestore;
     this.storage = deps.storage;
     this.translateDocumentsGCSBucket = deps.translateDocumentsGCSBucket;
@@ -126,4 +126,4 @@ class TranslationService {
   }
 }
 
-export {TranslationService};
+export {TranslationsService};

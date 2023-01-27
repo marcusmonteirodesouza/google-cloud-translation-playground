@@ -20,6 +20,10 @@ resource "google_cloud_run_service" "server" {
           value = "storage.googleapis.com"
         }
         env {
+          name = "NODE_ENV"
+          value = "production"
+        }
+        env {
           name  = "TRANSLATE_DOCUMENTS_GCS_BUCKET"
           value = var.translate_documents_gcs_bucket
         }
