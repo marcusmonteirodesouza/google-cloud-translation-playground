@@ -53,6 +53,17 @@ class TranslationsRouter {
       }
     );
 
+    router.get('/supported-languages', async (req, res, next) => {
+      try {
+        const supportedLanguages =
+          await this.translationService.getSupportedLanguages(req.locale);
+
+        return res.json(supportedLanguages);
+      } catch (err) {
+        return next(err);
+      }
+    });
+
     router.get('/translation-jobs/:id', async (req, res, next) => {
       try {
         const {id: translationJobId} = req.params;

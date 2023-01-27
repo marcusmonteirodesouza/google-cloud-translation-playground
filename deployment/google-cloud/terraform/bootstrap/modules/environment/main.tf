@@ -23,6 +23,12 @@ locals {
 
   cloudrun_service_agent_email = "service-${data.google_project.project.number}@serverless-robot-prod.iam.gserviceaccount.com"
 
+  local_testing_roles = [
+    "roles/cloudtranslate.user",
+    "roles/datastore.user",
+    "roles/storage.admin"
+  ]
+
   server_image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.server.repository_id}/server"
 
   cloud_function_buckets = {
@@ -95,6 +101,20 @@ resource "google_artifact_registry_repository_iam_member" "cloudrun_service_agen
   repository = google_artifact_registry_repository.server.name
   role       = "roles/artifactregistry.reader"
   member     = "serviceAccount:${local.cloudrun_service_agent_email}"
+}
+
+# Local testing Service Account roles and permissions
+resource "google_service_account" "local_testing" {
+  project      = var.project_id
+  account_id   = "local-testing"
+  display_name = "Has the roles and permissions required for locally test the applications."
+}
+
+resource "google_project_iam_member" "local_testing" {
+  for_each = toset(local.local_testing_roles)
+  project  = var.project_id
+  role     = each.value
+  member   = "serviceAccount:${google_service_account.local_testing.email}"
 }
 
 # Only a project's Owner can create App Engine applications https://cloud.google.com/appengine/docs/standard/python/roles#primitive_roles
