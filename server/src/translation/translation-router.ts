@@ -67,12 +67,18 @@ class TranslationRouter {
       }
     });
 
-    router.get('translation-jobs/:id/download', async (req, res, next) => {
+    router.get('/translation-jobs/:id/download', async (req, res, next) => {
       try {
         const {id: translationJobId} = req.params;
 
         const translatedFile = await this.translationService.getTranslatedFile(
           translationJobId
+        );
+
+        res.setHeader('Content-Type', translatedFile.metadata['contentType']);
+        res.setHeader(
+          'Content-Disposition',
+          `attachment; filename="${translatedFile.name}"`
         );
 
         translatedFile

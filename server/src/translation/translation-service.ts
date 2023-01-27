@@ -114,7 +114,7 @@ class TranslationService {
     }
 
     const [file] = await this.storage
-      .bucket(this.translateDocumentsGCSBucket)
+      .bucket(this.translatedDocumentsGCSBucket)
       .file(translationJob.translatedFileName)
       .get();
 
