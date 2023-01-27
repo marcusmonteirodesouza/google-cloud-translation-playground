@@ -50,7 +50,7 @@ class TranslationsService {
     }
 
     const translatedFile = await this.translateAndUploadFile(
-      translationJobDocData.fileName,
+      translationJobId,
       translationJobDocData.translatedFileName,
       translationJobDocData.targetLanguageCode
     );
