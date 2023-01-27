@@ -36,10 +36,6 @@ resource "google_cloud_run_service" "server" {
       "run.googleapis.com/ingress" = "internal-and-cloud-load-balancing"
     }
   }
-
-  depends_on = [
-    google_artifact_registry_repository_iam_member.cloudrun_service_agent,
-  ]
 }
 
 resource "google_cloud_run_service_iam_member" "allow_unauthenticated" {
