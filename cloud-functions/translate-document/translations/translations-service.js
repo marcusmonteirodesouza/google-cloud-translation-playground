@@ -1,4 +1,5 @@
 const path = require('path');
+const { pipeline } = require('stream/promises');
 const stream = require('stream');
 const { Firestore } = require('@google-cloud/firestore'); // eslint-disable-line no-unused-vars
 const { Storage } = require('@google-cloud/storage'); // eslint-disable-line no-unused-vars
@@ -70,7 +71,7 @@ class TranslationsService {
       );
     }
 
-    this.#uploadFile(
+    await this.#uploadFile(
       translationJobDocData.translatedFileName,
       translatedDocumentStream
     );
@@ -159,7 +160,7 @@ class TranslationsService {
     return content;
   }
 
-  #uploadFile(translatedFileName, translatedDocumentStream) {
+  async #uploadFile(translatedFileName, translatedDocumentStream) {
     const translatedDocumentFile = this.#storage
       .bucket(this.#translatedDocumentsGCSBucket)
       .file(translatedFileName);
@@ -168,11 +169,10 @@ class TranslationsService {
     passthroughStream.write(translatedDocumentStream);
     passthroughStream.end();
 
-    passthroughStream
-      .pipe(translatedDocumentFile.createWriteStream())
-      .on('finish', () => {
-        // The file upload is complete
-      });
+    await pipeline(
+      passthroughStream,
+      translatedDocumentFile.createWriteStream()
+    );
   }
 }
 
