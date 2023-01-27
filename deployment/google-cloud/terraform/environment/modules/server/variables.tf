@@ -3,14 +3,9 @@ variable "region" {
   description = "The default GCP region for the created resources."
 }
 
-variable "source_archive_bucket" {
+variable "server_image" {
   type        = string
-  description = "The GCS bucket containing the zip archive which contains the function."
-}
-
-variable "source_archive_object" {
-  type        = string
-  description = "The source archive object (file) in archive bucket."
+  description = "The server container image name."
 }
 
 variable "translate_documents_gcs_bucket" {

@@ -1,5 +1,17 @@
+substitutions:
+  _SERVER_IMAGE_FULL: "${_SERVER_IMAGE}:${COMMIT_SHA}"
 steps:
-  - name: gcr.io/$PROJECT_ID/zip
+  # Server
+  - id: server-docker-build
+    name: "gcr.io/cloud-builders/docker"
+    args: ["build", "--tag", "${_SERVER_IMAGE_FULL}", "."]
+    dir: server
+  - id: server-docker-push
+    name: "gcr.io/cloud-builders/docker"
+    args: ["push", "${_SERVER_IMAGE_FULL}"]
+    dir: server
+  - id: translate-document-cloud-function-zip
+    name: gcr.io/$PROJECT_ID/zip
     args:
       [
         "-r",
@@ -9,9 +21,10 @@ steps:
         "package-lock.json",
       ]
     dir: cloud-functions/translate-document
-    id: translate-document-cloud-function-zip
     waitFor: ["-"]
-  - name: gcr.io/cloud-builders/gcloud
+  # Translate Document Cloud Function
+  - id: translate-document-cloud-function-upload
+    name: gcr.io/cloud-builders/gcloud
     args:
       [
         "storage",
@@ -22,14 +35,17 @@ steps:
       ]
     dir: cloud-functions/translate-document
     waitFor: ["translate-document-cloud-function-zip"]
-  - name: gcr.io/$PROJECT_ID/terraform
+  # Deployment
+  - id: terraform-init
+    name: gcr.io/$PROJECT_ID/terraform
     args:
       [
         "-chdir=deployment/google-cloud/terraform/environment",
         "init",
         "-backend-config=bucket=${_TFSTATE_BUCKET}",
       ]
-  - name: gcr.io/$PROJECT_ID/terraform
+  - id: terraform-apply
+    name: gcr.io/$PROJECT_ID/terraform
     args:
       [
         "-chdir=deployment/google-cloud/terraform/environment",
@@ -39,6 +55,6 @@ steps:
     env:
       - "TF_VAR_project_id=${PROJECT_ID}"
       - "TF_VAR_region=${_REGION}"
-      - "TF_VAR_target_language_codes=${_TARGET_LANGUAGE_CODES}"
+      - "TF_VAR_server_image=${_SERVER_IMAGE_FULL}"
       - "TF_VAR_translate_document_cloud_function_source_archive_bucket=${_TRANSLATE_DOCUMENT_CLOUD_FUNCTION_SOURCE_ARCHIVE_BUCKET}"
       - "TF_VAR_translate_document_cloud_function_source_archive_object=translate-document-cloud-function.zip"

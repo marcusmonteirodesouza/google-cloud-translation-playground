@@ -18,6 +18,8 @@ locals {
     "roles/pubsub.publisher"
   ]
 
+  server_image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.server.repository_id}/server"
+
   cloud_function_buckets = {
     "translate-document" : "translate-document-cloud-function-${random_id.random.hex}",
   }
@@ -52,6 +54,7 @@ resource "google_cloudbuild_trigger" "push_to_branch_deployment" {
   substitutions = {
     _TFSTATE_BUCKET                                          = var.tfstate_bucket
     _REGION                                                  = var.region
+    _SERVER_IMAGE_NAME                                       = local.server_image
     _TRANSLATE_DOCUMENT_CLOUD_FUNCTION_SOURCE_ARCHIVE_BUCKET = local.cloud_function_buckets["translate-document"]
   }
 }
@@ -86,6 +89,15 @@ resource "google_app_engine_application" "firestore" {
   location_id   = var.region
   database_type = "CLOUD_FIRESTORE"
 }
+
+# Server
+resource "google_artifact_registry_repository" "server" {
+  project       = var.project_id
+  location      = var.region
+  repository_id = "server"
+  format        = "DOCKER"
+}
+
 
 # Cloud Function Buckets
 resource "google_storage_bucket" "cloud_functions" {

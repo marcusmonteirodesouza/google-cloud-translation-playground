@@ -8,9 +8,9 @@ variable "region" {
   description = "The default GCP region for the created resources."
 }
 
-variable "target_language_codes" {
+variable "server_image" {
   type        = string
-  description = "Comma-separated list of codes of the target languages to which documents will be translated to. See https://cloud.google.com/translate/docs/languages."
+  description = "The server container image name."
 }
 
 variable "translate_document_cloud_function_source_archive_bucket" {
