@@ -1,10 +1,10 @@
 import {Router} from 'express';
 import {celebrate, Joi, Segments} from 'celebrate';
 import {StatusCodes} from 'http-status-codes';
-import {TranslationService} from './translation-service';
+import {TranslationsService} from './translations-service';
 
-class TranslationRouter {
-  constructor(private readonly translationService: TranslationService) {}
+class TranslationsRouter {
+  constructor(private readonly translationService: TranslationsService) {}
 
   get router() {
     const router = Router();
@@ -99,4 +99,4 @@ class TranslationRouter {
   }
 }
 
-export {TranslationRouter};
+export {TranslationsRouter};
