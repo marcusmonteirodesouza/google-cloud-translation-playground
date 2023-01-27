@@ -54,7 +54,7 @@ resource "google_cloudbuild_trigger" "push_to_branch_deployment" {
   substitutions = {
     _TFSTATE_BUCKET                                          = var.tfstate_bucket
     _REGION                                                  = var.region
-    _SERVER_IMAGE_NAME                                       = local.server_image
+    _SERVER_IMAGE                                       = local.server_image
     _TRANSLATE_DOCUMENT_CLOUD_FUNCTION_SOURCE_ARCHIVE_BUCKET = local.cloud_function_buckets["translate-document"]
   }
 }
