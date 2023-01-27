@@ -12,14 +12,7 @@ steps:
     dir: server
   - id: translate-document-cloud-function-zip
     name: gcr.io/$PROJECT_ID/zip
-    args:
-      [
-        "-r",
-        "translate-document-cloud-function.zip",
-        "index.js",
-        "package.json",
-        "package-lock.json",
-      ]
+    args: ["-r", "translate-document-cloud-function.zip", "."]
     dir: cloud-functions/translate-document
     waitFor: ["-"]
   # Translate Document Cloud Function

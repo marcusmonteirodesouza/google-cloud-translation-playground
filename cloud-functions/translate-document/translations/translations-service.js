@@ -49,7 +49,7 @@ class TranslationsService {
       throw new NotFoundError(`translation job ${translationJobId} not found`);
     }
 
-    await this.translateAndUploadFile(
+    const translatedFile = await this.translateAndUploadFile(
       translationJobDocData.fileName,
       translationJobDocData.translatedFileName,
       translationJobDocData.targetLanguageCode
@@ -57,6 +57,7 @@ class TranslationsService {
 
     await translationJobDocRef.update({
       status: 'Done',
+      translatedFileUrl: translatedFile.publicUrl,
     });
   }
 
@@ -91,9 +92,9 @@ class TranslationsService {
         targetLanguageCode,
       });
 
-    const translatedDocumentFile = this.#storage(
-      this.#translatedDocumentsGCSBucket
-    ).file(translatedFileName);
+    const translatedDocumentFile = this.#storage
+      .bucket(this.#translatedDocumentsGCSBucket)
+      .file(translatedFileName);
 
     const passthroughStream = new stream.PassThrough();
     passthroughStream.write(
@@ -106,6 +107,8 @@ class TranslationsService {
       .on('finish', () => {
         // The file upload is complete
       });
+
+    return translatedDocumentFile;
   }
 
   async #detectLanguage(content) {

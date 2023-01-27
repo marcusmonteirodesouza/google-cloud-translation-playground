@@ -26,6 +26,7 @@ interface TranslationJob {
   targetLanguageCode: string;
   fileName: string;
   translatedFileName: string;
+  translatedFileUrl: string | undefined;
 }
 
 class TranslationService {
@@ -55,6 +56,7 @@ class TranslationService {
       targetLanguageCode: createTranslationJobArgs.targetLanguageCode,
       fileName: createTranslationJobArgs.fileName,
       translatedFileName,
+      translatedFileUrl: undefined,
     };
 
     const translationJobDocRef = await this.firestore
@@ -102,6 +104,7 @@ class TranslationService {
       targetLanguageCode: translationJobDocData.targetLanguageCode,
       fileName: translationJobDocData.fileName,
       translatedFileName: translationJobDocData.translatedFileName,
+      translatedFileUrl: translationJobDocData.translatedFileUrl,
     };
   }
 }
