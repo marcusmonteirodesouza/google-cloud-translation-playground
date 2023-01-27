@@ -1,5 +1,5 @@
 locals {
-  cloudbuild_sa_email = "${data.google_project.environment.number}@cloudbuild.gserviceaccount.com"
+  cloudbuild_sa_email = "${data.google_project.project.number}@cloudbuild.gserviceaccount.com"
 
   cloudbuild_sa_roles = [
     "roles/cloudfunctions.admin",
@@ -7,16 +7,20 @@ locals {
     "roles/iam.serviceAccountUser",
   ]
 
-  compute_sa_email = "${data.google_project.environment.number}-compute@developer.gserviceaccount.com"
+  compute_sa_email = "${data.google_project.project.number}-compute@developer.gserviceaccount.com"
 
   compute_sa_roles = [
+    "roles/datastore.user",
+    "roles/storage.admin"
   ]
 
-  gcs_sa_email = "service-${data.google_project.environment.number}@gs-project-accounts.iam.gserviceaccount.com"
+  gcs_sa_email = "service-${data.google_project.project.number}@gs-project-accounts.iam.gserviceaccount.com"
 
   gcs_sa_roles = [
     "roles/pubsub.publisher"
   ]
+
+  cloudrun_service_agent_email = "service-${data.google_project.project.number}@serverless-robot-prod.iam.gserviceaccount.com"
 
   server_image = "${var.region}-docker.pkg.dev/${var.project_id}/${google_artifact_registry_repository.server.repository_id}/server"
 
@@ -25,7 +29,7 @@ locals {
   }
 }
 
-data "google_project" "environment" {
+data "google_project" "project" {
   project_id = var.project_id
 }
 
@@ -54,7 +58,7 @@ resource "google_cloudbuild_trigger" "push_to_branch_deployment" {
   substitutions = {
     _TFSTATE_BUCKET                                          = var.tfstate_bucket
     _REGION                                                  = var.region
-    _SERVER_IMAGE                                       = local.server_image
+    _SERVER_IMAGE                                            = local.server_image
     _TRANSLATE_DOCUMENT_CLOUD_FUNCTION_SOURCE_ARCHIVE_BUCKET = local.cloud_function_buckets["translate-document"]
   }
 }
@@ -81,6 +85,15 @@ resource "google_project_iam_member" "gcs_sa" {
   project  = var.project_id
   role     = each.value
   member   = "serviceAccount:${local.gcs_sa_email}"
+}
+
+# Cloud Run Service Agent roles and permissions
+resource "google_artifact_registry_repository_iam_member" "cloudrun_service_agent_server" {
+  project    = google_artifact_registry_repository.server.project
+  location   = google_artifact_registry_repository.server.location
+  repository = google_artifact_registry_repository.server.name
+  role       = "roles/artifactregistry.reader"
+  member     = "serviceAccount:${local.cloudrun_service_agent_email}"
 }
 
 # Only a project's Owner can create App Engine applications https://cloud.google.com/appengine/docs/standard/python/roles#primitive_roles
