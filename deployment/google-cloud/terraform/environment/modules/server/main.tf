@@ -31,11 +31,12 @@ resource "google_cloud_run_service" "server" {
     }
   }
 
-  metadata {
-    annotations = {
-      "run.googleapis.com/ingress" = "internal-and-cloud-load-balancing"
-    }
-  }
+  # TODO(Marcus): Uncomment when implementing the Load Balancer
+  # metadata {
+  #   annotations = {
+  #     "run.googleapis.com/ingress" = "internal-and-cloud-load-balancing"
+  #   }
+  # }
 }
 
 resource "google_cloud_run_service_iam_member" "allow_unauthenticated" {

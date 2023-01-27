@@ -14,6 +14,7 @@ app.use(fileUpload());
 
 const firestore = new Firestore({
   projectId: config.projectId,
+  ignoreUndefinedProperties: true,
 });
 
 const storage = new Storage({
