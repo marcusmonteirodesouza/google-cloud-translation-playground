@@ -1,3 +1,4 @@
+const path = require('path');
 const stream = require('stream');
 const { Firestore } = require('@google-cloud/firestore'); // eslint-disable-line no-unused-vars
 const { Storage } = require('@google-cloud/storage'); // eslint-disable-line no-unused-vars
@@ -36,9 +37,13 @@ class TranslationsService {
 
   /**
    * Executes a Translation Job.
-   * @param {string} translationJobId
+   * @param {string} fileName
    */
-  async executeTranslationJob(translationJobId) {
+  async executeTranslationJob(fileName) {
+    const parsedFileName = path.parse(fileName);
+
+    const translationJobId = parsedFileName.name;
+
     const translationJobDocRef = this.#firestore.doc(
       `${this.#translationJobsCollection}/${translationJobId}`
     );
@@ -46,11 +51,11 @@ class TranslationsService {
     const translationJobDocData = (await translationJobDocRef.get()).data();
 
     if (!translationJobDocData) {
-      throw new NotFoundError(`translation job ${translationJobId} not found`);
+      throw new NotFoundError(`translation job ${fileName} not found`);
     }
 
     const translatedFile = await this.translateAndUploadFile(
-      translationJobId,
+      fileName,
       translationJobDocData.translatedFileName,
       translationJobDocData.targetLanguageCode
     );

@@ -67,7 +67,9 @@ class TranslationService {
 
     const gcsBucket = this.storage.bucket(this.translateDocumentsGCSBucket);
 
-    const gcsFile = gcsBucket.file(translationJobDocRef.id);
+    const gcsFileName = `${translationJobDocRef.id}.${parsedFileName.ext}`;
+
+    const gcsFile = gcsBucket.file(gcsFileName);
 
     const passthroughStream = new stream.PassThrough();
     passthroughStream.write(createTranslationJobArgs.data);
