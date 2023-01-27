@@ -28,10 +28,9 @@ resource "google_secret_manager_secret_version" "tfvars" {
 module "environment" {
   source = "./modules/environment"
 
-  project_id            = module.project.project_id
-  region                = var.region
-  target_language_codes = var.target_language_codes
-  sourcerepo_name       = var.sourcerepo_name
-  branch_name           = var.branch_name
-  tfstate_bucket        = module.project.tfstate_bucket
+  project_id      = module.project.project_id
+  region          = var.region
+  sourcerepo_name = var.sourcerepo_name
+  branch_name     = var.branch_name
+  tfstate_bucket  = module.project.tfstate_bucket
 }
