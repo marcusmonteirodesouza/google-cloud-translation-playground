@@ -42,9 +42,7 @@ class TranslationsService {
    * @param {string} fileName
    */
   async executeTranslationJob(fileName, contentType) {
-    const parsedFileName = path.parse(fileName);
-
-    const translationJobId = parsedFileName.name;
+    const translationJobId = this.getTranslationJobId(fileName);
 
     const translationJobDocRef = this.#firestore.doc(
       `${this.#translationJobsCollection}/${translationJobId}`
@@ -74,6 +72,12 @@ class TranslationsService {
     await this.#uploadFile(fileName, translatedDocumentStream);
 
     await this.updateTranslationJobStatus(translationJobId, 'Done');
+  }
+
+  getTranslationJobId(fileName) {
+    const parsedFileName = path.parse(fileName);
+
+    return parsedFileName.name;
   }
 
   async updateTranslationJobStatus(translationJobId, status) {

@@ -38,7 +38,7 @@ functions.cloudEvent('translateDocument', async (cloudEvent) => {
     envVars.TRANSLATED_DOCUMENTS_GCS_BUCKET
   );
 
-  const translationJobId = file.name;
+  const translationJobId = translationsService.getTranslationJobId(file.name);
 
   console.log('executing translation job:', translationJobId);
 
