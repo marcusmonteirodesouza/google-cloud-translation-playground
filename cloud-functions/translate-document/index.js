@@ -42,7 +42,14 @@ functions.cloudEvent('translateDocument', async (cloudEvent) => {
 
   console.log('executing translation job:', translationJobId);
 
-  await translationsService.executeTranslationJob(file.name, file.contentType);
+  try {
+    await translationsService.executeTranslationJob(
+      file.name,
+      file.contentType
+    );
+  } finally {
+    await translationsService.updateTranslationJobStatus('Error');
+  }
 
   console.log(`translation job ${translationJobId} executed!`);
 });

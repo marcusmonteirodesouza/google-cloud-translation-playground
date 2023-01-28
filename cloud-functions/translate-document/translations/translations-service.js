@@ -59,13 +59,13 @@ class TranslationsService {
     let translatedDocumentStream;
 
     if (this.#textTranslationContentTypes.includes(contentType)) {
-      translatedDocumentStream = await this.translateText(
+      translatedDocumentStream = await this.#translateText(
         fileName,
         contentType,
         translationJobDocData.targetLanguageCode
       );
     } else {
-      translatedDocumentStream = await this.translateDocument(
+      translatedDocumentStream = await this.#translateDocument(
         fileName,
         translationJobDocData.targetLanguageCode
       );
@@ -73,12 +73,20 @@ class TranslationsService {
 
     await this.#uploadFile(fileName, translatedDocumentStream);
 
+    await this.updateTranslationJobStatus('Done');
+  }
+
+  async updateTranslationJobStatus(translationJobId, status) {
+    const translationJobDocRef = this.#firestore.doc(
+      `${this.#translationJobsCollection}/${translationJobId}`
+    );
+
     await translationJobDocRef.update({
-      status: 'Done',
+      status,
     });
   }
 
-  async translateText(fileName, contentType, targetLanguageCode) {
+  async #translateText(fileName, contentType, targetLanguageCode) {
     const projectId = await this.#translationServiceClient.getProjectId();
 
     const contents = await this.#downloadFileContents(fileName);
@@ -102,7 +110,7 @@ class TranslationsService {
     return new TextEncoder().encode(translatedText);
   }
 
-  async translateDocument(fileName, targetLanguageCode) {
+  async #translateDocument(fileName, targetLanguageCode) {
     const projectId = await this.#translationServiceClient.getProjectId();
 
     const contents = await this.#downloadFileContents(fileName);
