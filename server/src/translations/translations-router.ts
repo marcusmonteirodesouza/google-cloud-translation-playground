@@ -1,13 +1,63 @@
 import {Router} from 'express';
+import {Socket} from 'socket.io';
 import {celebrate, Joi, Segments} from 'celebrate';
 import {StatusCodes} from 'http-status-codes';
-import {createSession} from 'better-sse';
 import {TranslationsService} from './translations-service';
-import {NotFoundError} from '../errors';
 import {TranslationJob} from './translation-job';
 
 class TranslationsRouter {
+  private readonly ioSockets: string[] = [];
+
   constructor(private readonly translationService: TranslationsService) {}
+
+  registerSocket(socket: Socket) {
+    socket.on('translation-job-updates', async translationJobId => {
+      console.log(
+        `registering socket ${socket.id} to receive updates for translation job ${translationJobId}...`
+      );
+
+      const translationJobDoc =
+        this.translationService.getTranslationJobDoc(translationJobId);
+
+      console.log(
+        `registering observer for translation job ${translationJobId}, to emit to socket ${socket.id}...`
+      );
+
+      const translationJobObserver = translationJobDoc.onSnapshot(snapshot => {
+        console.log(
+          `received snapshot for translation job ${translationJobId}, to emit to socket ${socket.id}`
+        );
+
+        const translationJobData = snapshot.data();
+
+        if (!translationJobData) {
+          throw new Error(`no data in the ${translationJobId} snapshot`);
+        }
+
+        const translationJob: TranslationJob = {
+          id: snapshot.id,
+          status: translationJobData.status,
+          targetLanguageCode: translationJobData.targetLanguageCode,
+          fileName: translationJobData.fileName,
+          translatedFileName: translationJobData.translatedFileName,
+        };
+
+        console.log(
+          `emitting translation job ${translationJob.id} update to ${socket.id}`,
+          translationJob
+        );
+
+        socket.emit('translation-job-updates', translationJob);
+      });
+
+      socket.on('disconnect', () => {
+        console.log(
+          `closing observer for translation job ${translationJobId}, to emit to socket ${socket.id}...`
+        );
+        translationJobObserver();
+      });
+    });
+  }
 
   get router() {
     const router = Router();
@@ -62,68 +112,6 @@ class TranslationsRouter {
           await this.translationService.getSupportedLanguages(req.locale);
 
         return res.json(supportedLanguages);
-      } catch (err) {
-        return next(err);
-      }
-    });
-
-    router.get('/translation-jobs/:id', async (req, res, next) => {
-      try {
-        const {id: translationJobId} = req.params;
-
-        const translationJob = await this.translationService.getTranslationJob(
-          translationJobId
-        );
-
-        if (!translationJob) {
-          throw new NotFoundError(
-            `translation job ${translationJobId} not found`
-          );
-        }
-
-        console.log(
-          `creating session for translation job ${translationJobId}...`
-        );
-
-        const session = await createSession(req, res);
-
-        const translationJobDoc =
-          this.translationService.getTranslationJobDoc(translationJobId);
-
-        const translationJobObserver = translationJobDoc.onSnapshot(
-          snapshot => {
-            console.log(
-              `received snapshot for translation job ${translationJobId}`
-            );
-
-            const translationJobData = snapshot.data();
-
-            if (!translationJobData) {
-              throw new Error(`no data in the ${translationJobId} snapshot`);
-            }
-
-            const translationJob: TranslationJob = {
-              id: snapshot.id,
-              status: translationJobData.status,
-              targetLanguageCode: translationJobData.targetLanguageCode,
-              fileName: translationJobData.fileName,
-              translatedFileName: translationJobData.translatedFileName,
-            };
-
-            console.log(
-              `pushing translation job ${translationJobId} from snapshot data...`
-            );
-
-            session.push(translationJob);
-          }
-        );
-
-        session.on('disconnected', () => {
-          console.log(
-            `session for translation job ${translationJobId} disconnected. Closing the document snapshot observer...`
-          );
-          translationJobObserver();
-        });
       } catch (err) {
         return next(err);
       }

@@ -1,7 +1,9 @@
+import http from 'http';
 import express from 'express';
 import cors from 'cors';
 import fileUpload from 'express-fileupload';
 import locale from 'locale';
+import {Server} from 'socket.io';
 import {Firestore} from '@google-cloud/firestore';
 import {Storage} from '@google-cloud/storage';
 import {TranslationServiceClient} from '@google-cloud/translate';
@@ -40,9 +42,9 @@ const translationsService = new TranslationsService({
   translatedDocumentsGCSBucket: config.translatedDocumentsGCSBucket,
 });
 
-const translationsRouter = new TranslationsRouter(translationsService).router;
+const translationsRouter = new TranslationsRouter(translationsService);
 
-app.use(translationsRouter);
+app.use(translationsRouter.router);
 
 app.use(
   async (
@@ -56,4 +58,16 @@ app.use(
   }
 );
 
-export {app};
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  },
+});
+
+io.on('connection', socket => {
+  translationsRouter.registerSocket(socket);
+});
+
+export {server};

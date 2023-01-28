@@ -1,6 +1,10 @@
 import { useEffect, useState } from 'react';
+import { io } from 'socket.io-client';
 import './App.css';
 import { translationsService } from './api/translations';
+import { config } from './config';
+
+const socket = io(config.apiBaseUrl);
 
 function App() {
   const [file, setFile] = useState();
@@ -8,7 +12,7 @@ function App() {
   const [targetLanguageCodeOptions, setTargetLanguageCodeOptions] = useState(
     []
   );
-  const [translationJobEventSource, setTranslationJobEventSource] = useState();
+  const [translatedFileUrl, setTranslatedFileUrl] = useState();
 
   useEffect(() => {
     const fetchSupportedLanguages = async () => {
@@ -38,34 +42,44 @@ function App() {
       file,
       targetLanguageCode
     );
-    const translationJobUrl = translationsService.getTranslationJobUrl(
-      translationJob.id
-    );
-    const eventSource = new EventSource(translationJobUrl);
-    eventSource.onmessage = function (data) {
-      console.log('handleFormSubmit data', data);
-    };
+    socket.emit('translation-job-updates', translationJob.id);
+    socket.on('translation-job-updates', (translationJob) => {
+      console.log('translation-job-updates translationJob', translationJob);
+      if (translationJob.status === 'Done') {
+        socket.removeListener('translation-job-updates');
+        setTranslatedFileUrl(
+          translationsService.getTranslatedFileUrl(translationJob.id)
+        );
+      }
+    });
   };
 
   return (
-    <form onSubmit={handleFormSubmit}>
-      <input type="file" onChange={handleFileChange} />
-      <select
-        value={targetLanguageCode}
-        onChange={handleTargetLanguageCodeChange}
-      >
-        {targetLanguageCodeOptions.map((tl) => {
-          return (
-            <option key={tl.languageCode} value={tl.languageCode}>
-              {tl.displayName}
-            </option>
-          );
-        })}
-      </select>
-      <div>
-        <input type="submit" value="submit" />
-      </div>
-    </form>
+    <div>
+      <form onSubmit={handleFormSubmit}>
+        <input type="file" onChange={handleFileChange} />
+        <select
+          value={targetLanguageCode}
+          onChange={handleTargetLanguageCodeChange}
+        >
+          {targetLanguageCodeOptions.map((tl) => {
+            return (
+              <option key={tl.languageCode} value={tl.languageCode}>
+                {tl.displayName}
+              </option>
+            );
+          })}
+        </select>
+        <div>
+          <input type="submit" value="submit" />
+        </div>
+      </form>
+      {translatedFileUrl && (
+        <div>
+          <a href={translatedFileUrl}>Download</a>
+        </div>
+      )}
+    </div>
   );
 }
 

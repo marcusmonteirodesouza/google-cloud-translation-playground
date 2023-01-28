@@ -58,8 +58,8 @@ class TranslationsService {
     }
   }
 
-  getTranslationJobUrl(translationJobId) {
-    return `${this.#apiBaseUrl}/translation-jobs/${translationJobId}`;
+  getTranslatedFileUrl(translationJobId) {
+    return `${this.#apiBaseUrl}/translation-jobs/${translationJobId}/download`;
   }
 }
 
