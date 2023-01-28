@@ -1,6 +1,7 @@
 import {Router} from 'express';
 import {celebrate, Joi, Segments} from 'celebrate';
 import {StatusCodes} from 'http-status-codes';
+import {createSession} from 'better-sse';
 import {TranslationsService} from './translations-service';
 import {NotFoundError} from '../errors';
 import {TranslationJob} from './translation-job';
@@ -80,12 +81,11 @@ class TranslationsRouter {
           );
         }
 
-        res.setHeader('Cache-Control', 'no-cache');
-        res.setHeader('Content-Type', 'text/event-stream');
-        res.setHeader('Connection', 'keep-alive');
-        res.setHeader('X-Accel-Buffering', 'no');
+        console.log(
+          `creating session for translation job ${translationJobId}...`
+        );
 
-        res.write(`data: ${JSON.stringify(translationJob)}\n\n`);
+        const session = await createSession(req, res);
 
         const translationJobDoc =
           this.translationService.getTranslationJobDoc(translationJobId);
@@ -110,16 +110,19 @@ class TranslationsRouter {
               translatedFileName: translationJobData.translatedFileName,
             };
 
-            res.write(`data: ${JSON.stringify(translationJob)}\n\n`);
+            console.log(
+              `pushing translation job ${translationJobId} from snapshot data...`
+            );
+
+            session.push(translationJob);
           }
         );
 
-        res.on('close', () => {
+        session.on('disconnected', () => {
           console.log(
-            `closing translationJobObserver for translation job ${translationJobId}`
+            `session for translation job ${translationJobId} disconnected. Closing the document snapshot observer...`
           );
           translationJobObserver();
-          res.end();
         });
       } catch (err) {
         return next(err);

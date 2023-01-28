@@ -35,6 +35,7 @@
     "@google-cloud/firestore": "^6.4.2",
     "@google-cloud/storage": "^6.9.0",
     "@google-cloud/translate": "^7.0.5",
+    "better-sse": "^0.8.0",
     "celebrate": "^15.0.1",
     "cors": "^2.8.5",
     "express": "^4.18.2",
