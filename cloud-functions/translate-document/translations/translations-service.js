@@ -73,7 +73,7 @@ class TranslationsService {
 
     await this.#uploadFile(fileName, translatedDocumentStream);
 
-    await this.updateTranslationJobStatus('Done');
+    await this.updateTranslationJobStatus(translationJobId, 'Done');
   }
 
   async updateTranslationJobStatus(translationJobId, status) {
