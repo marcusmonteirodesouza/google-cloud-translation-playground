@@ -20,8 +20,8 @@ class TranslationsService {
       return data.map(
         (supportedLanguage) =>
           new SupportedLanguage(
-            supportedLanguage['languageCode'],
-            supportedLanguage['displayName']
+            supportedLanguage.languageCode,
+            supportedLanguage.displayName
           )
       );
     } else {
@@ -46,11 +46,11 @@ class TranslationsService {
     if (response.ok) {
       const data = await response.json();
       return new TranslationJob(
-        data['id'],
-        data['status'],
-        data['targetLanguageCode'],
-        data['fileName'],
-        data['translatedFileName']
+        data.id,
+        data.status,
+        data.targetLanguageCode,
+        data.fileName,
+        data.translatedFileName
       );
     } else {
       const errorResponse = await response.json();
@@ -58,24 +58,8 @@ class TranslationsService {
     }
   }
 
-  async getTranslationJob(translationJobId) {
-    const url = `${this.#apiBaseUrl}/translation-jobs/${translationJobId}`;
-
-    const response = await fetch(url);
-
-    if (response.ok) {
-      const data = await response.json();
-      return new TranslationJob(
-        data['id'],
-        data['status'],
-        data['targetLanguageCode'],
-        data['fileName'],
-        data['translatedFileName']
-      );
-    } else {
-      const errorResponse = await response.json();
-      throw new ApiError(errorResponse.message);
-    }
+  getTranslationJobUrl(translationJobId) {
+    return `${this.#apiBaseUrl}/translation-jobs/${translationJobId}`;
   }
 }
 

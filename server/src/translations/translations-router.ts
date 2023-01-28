@@ -2,6 +2,8 @@ import {Router} from 'express';
 import {celebrate, Joi, Segments} from 'celebrate';
 import {StatusCodes} from 'http-status-codes';
 import {TranslationsService} from './translations-service';
+import {NotFoundError} from '../errors';
+import {TranslationJob} from './translation-job';
 
 class TranslationsRouter {
   constructor(private readonly translationService: TranslationsService) {}
@@ -72,7 +74,53 @@ class TranslationsRouter {
           translationJobId
         );
 
-        return res.json(translationJob);
+        if (!translationJob) {
+          throw new NotFoundError(
+            `translation job ${translationJobId} not found`
+          );
+        }
+
+        res.setHeader('Cache-Control', 'no-cache');
+        res.setHeader('Content-Type', 'text/event-stream');
+        res.setHeader('Connection', 'keep-alive');
+        res.setHeader('X-Accel-Buffering', 'no');
+
+        res.write(`data: ${JSON.stringify(translationJob)}\n\n`);
+
+        const translationJobDoc =
+          this.translationService.getTranslationJobDoc(translationJobId);
+
+        const translationJobObserver = translationJobDoc.onSnapshot(
+          snapshot => {
+            console.log(
+              `received snapshot for translation job ${translationJobId}`
+            );
+
+            const translationJobData = snapshot.data();
+
+            if (!translationJobData) {
+              throw new Error(`no data in the ${translationJobId} snapshot`);
+            }
+
+            const translationJob: TranslationJob = {
+              id: snapshot.id,
+              status: translationJobData.status,
+              targetLanguageCode: translationJobData.targetLanguageCode,
+              fileName: translationJobData.fileName,
+              translatedFileName: translationJobData.translatedFileName,
+            };
+
+            res.write(`data: ${JSON.stringify(translationJob)}\n\n`);
+          }
+        );
+
+        res.on('close', () => {
+          console.log(
+            `closing translationJobObserver for translation job ${translationJobId}`
+          );
+          translationJobObserver();
+          res.end();
+        });
       } catch (err) {
         return next(err);
       }
@@ -86,10 +134,7 @@ class TranslationsRouter {
           translationJobId
         );
 
-        res.setHeader(
-          'Content-Type',
-          translatedFile.file.metadata['contentType']
-        );
+        res.setHeader('Content-Type', translatedFile.file.metadata.contentType);
         res.setHeader(
           'Content-Disposition',
           `attachment; filename="${translatedFile.translatedFileName}"`

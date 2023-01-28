@@ -149,7 +149,7 @@ class TranslationsService {
 
     const languageCode = detectLanguageResponse.languages.reduce(
       (prev, current) => (prev.confidence > current.confidence ? prev : current)
-    )['languageCode'];
+    ).languageCode;
 
     return languageCode;
   }

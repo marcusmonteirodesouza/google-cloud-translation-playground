@@ -8,12 +8,13 @@ function App() {
   const [targetLanguageCodeOptions, setTargetLanguageCodeOptions] = useState(
     []
   );
+  const [translationJobEventSource, setTranslationJobEventSource] = useState();
 
   useEffect(() => {
     const fetchSupportedLanguages = async () => {
       const supportedLanguages =
         await translationsService.getSupportedLanguages();
-      setTargetLanguageCode(supportedLanguages[0]);
+      setTargetLanguageCode(supportedLanguages[0].languageCode);
       setTargetLanguageCodeOptions(supportedLanguages);
     };
 
@@ -33,7 +34,17 @@ function App() {
 
   const handleFormSubmit = async (e) => {
     e.preventDefault();
-    await translationsService.createTranslationJob(file, targetLanguageCode);
+    const translationJob = await translationsService.createTranslationJob(
+      file,
+      targetLanguageCode
+    );
+    const translationJobUrl = translationsService.getTranslationJobUrl(
+      translationJob.id
+    );
+    const eventSource = new EventSource(translationJobUrl);
+    eventSource.onmessage = function (data) {
+      console.log('handleFormSubmit data', data);
+    };
   };
 
   return (

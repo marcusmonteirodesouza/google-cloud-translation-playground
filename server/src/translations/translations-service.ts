@@ -103,9 +103,9 @@ class TranslationsService {
   async getTranslationJob(
     translationJobId: string
   ): Promise<TranslationJob | undefined> {
-    const translationJobDoc = await this.firestore
-      .doc(`${this.translationJobsCollection}/${translationJobId}`)
-      .get();
+    const translationJobDoc = await this.getTranslationJobDoc(
+      translationJobId
+    ).get();
 
     const translationJobDocData = translationJobDoc.data();
 
@@ -120,6 +120,12 @@ class TranslationsService {
       fileName: translationJobDocData.fileName,
       translatedFileName: translationJobDocData.translatedFileName,
     };
+  }
+
+  getTranslationJobDoc(translationJobId: string) {
+    return this.firestore.doc(
+      `${this.translationJobsCollection}/${translationJobId}`
+    );
   }
 
   async getTranslatedFile(translationJobId: string) {
