@@ -47,11 +47,19 @@ functions.cloudEvent('translateDocument', async (cloudEvent) => {
       file.name,
       file.contentType
     );
-  } finally {
-    await translationsService.updateTranslationJobStatus(
-      translationJobId,
-      'Error'
-    );
+  } catch (err) {
+    try {
+      await translationsService.updateTranslationJobStatus(
+        translationJobId,
+        'Error'
+      );
+    } catch (updateTranslationJobStatusErr) {
+      console.error(
+        'updateTranslationJobStatusErr',
+        updateTranslationJobStatusErr
+      );
+    }
+    throw err;
   }
 
   console.log(`translation job ${translationJobId} executed!`);

@@ -43,7 +43,7 @@ class TranslationsRouter {
         };
 
         console.log(
-          `emitting translation job ${translationJob.id} update to ${socket.id}`,
+          `emitting translation job ${translationJob.id} update to socket ${socket.id}`,
           translationJob
         );
 

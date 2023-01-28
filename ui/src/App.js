@@ -4,26 +4,33 @@ import './App.css';
 import { translationsService } from './api/translations';
 import { config } from './config';
 
-const socket = io(config.apiBaseUrl);
-
 function App() {
   const [file, setFile] = useState();
   const [targetLanguageCode, setTargetLanguageCode] = useState();
-  const [targetLanguageCodeOptions, setTargetLanguageCodeOptions] = useState(
-    []
-  );
+  const [supportedTargetLanguages, setSupportedTargetLanguages] = useState([]);
   const [translatedFileUrl, setTranslatedFileUrl] = useState();
+  const [socket, setSocket] = useState();
 
   useEffect(() => {
     const fetchSupportedLanguages = async () => {
       const supportedLanguages =
         await translationsService.getSupportedLanguages();
       setTargetLanguageCode(supportedLanguages[0].languageCode);
-      setTargetLanguageCodeOptions(supportedLanguages);
+      setSupportedTargetLanguages(supportedLanguages);
     };
 
     fetchSupportedLanguages();
   }, []);
+
+  useEffect(() => {
+    const newSocket = io(config.apiBaseUrl);
+
+    setSocket(newSocket);
+
+    return () => {
+      newSocket.disconnect();
+    };
+  }, [setSocket]);
 
   const handleFileChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -32,7 +39,6 @@ function App() {
   };
 
   const handleTargetLanguageCodeChange = (e) => {
-    console.log('e', e);
     setTargetLanguageCode(e.target.value);
   };
 
@@ -44,7 +50,6 @@ function App() {
     );
     socket.emit('translation-job-updates', translationJob.id);
     socket.on('translation-job-updates', (translationJob) => {
-      console.log('translation-job-updates translationJob', translationJob);
       if (translationJob.status === 'Done') {
         socket.removeListener('translation-job-updates');
         setTranslatedFileUrl(
@@ -62,7 +67,7 @@ function App() {
           value={targetLanguageCode}
           onChange={handleTargetLanguageCodeChange}
         >
-          {targetLanguageCodeOptions.map((tl) => {
+          {supportedTargetLanguages.map((tl) => {
             return (
               <option key={tl.languageCode} value={tl.languageCode}>
                 {tl.displayName}
