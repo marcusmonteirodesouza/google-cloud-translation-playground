@@ -10,12 +10,8 @@
     "clean": "gts clean",
     "compile": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "nodemon --watch 'src/**/*.ts' --exec \"ts-node\" -r dotenv-expand/config src/index.ts",
-    "start": "npm run dev",
-    "up:firestore": "docker compose up -d firestore_emulator --wait",
-    "up:gcs": "docker compose up -d gcs_emulator --wait",
-    "prepare": "npm run compile",
-    "prestart": "npm run up:firestore && npm run up:gcs"
+    "start": "nodemon --watch 'src/**/*.ts' --exec \"ts-node\" -r dotenv-expand/config src/index.ts",
+    "prepare": "npm run compile"
   },
   "author": "Marcus Vinicius Monteiro de Souza",
   "license": "MIT",

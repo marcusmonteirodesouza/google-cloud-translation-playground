@@ -20,12 +20,12 @@ class TranslationsRouter {
         this.translationService.getTranslationJobDoc(translationJobId);
 
       console.log(
-        `registering observer for translation job ${translationJobId}, to emit to socket ${socket.id}...`
+        `registering observer for translation job ${translationJobId}, to emit to socket at ip ${socket.handshake.address}...`
       );
 
       const translationJobObserver = translationJobDoc.onSnapshot(snapshot => {
         console.log(
-          `received snapshot for translation job ${translationJobId}, to emit to socket ${socket.id}`
+          `received snapshot for translation job ${translationJobId}, to emit to socket at ip ${socket.handshake.address}`
         );
 
         const translationJobData = snapshot.data();
@@ -43,7 +43,7 @@ class TranslationsRouter {
         };
 
         console.log(
-          `emitting translation job ${translationJob.id} update to socket ${socket.id}`,
+          `emitting translation job ${translationJob.id} update to socket at ip ${socket.handshake.address}`,
           translationJob
         );
 
@@ -52,7 +52,7 @@ class TranslationsRouter {
 
       socket.on('disconnect', () => {
         console.log(
-          `closing observer for translation job ${translationJobId}, to emit to socket ${socket.id}...`
+          `closing observer for translation job ${translationJobId}, to emit to socket at ip ${socket.handshake.address}...`
         );
         translationJobObserver();
       });

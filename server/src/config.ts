@@ -3,8 +3,7 @@ import {Joi} from 'celebrate';
 const envVarsSchema = Joi.object()
   .keys({
     PROJECT_ID: Joi.string().required(),
-    FIRESTORE_EMULATOR_HOST: Joi.string(),
-    GCS_API_ENDPOINT: Joi.string().default('storage.googleapis.com'),
+    GOOGLE_APPLICATION_CREDENTIALS: Joi.string(),
     NODE_ENV: Joi.string()
       .valid('development', 'test', 'production')
       .required(),
@@ -23,8 +22,6 @@ if (error) {
 
 interface Config {
   projectId: string;
-  firestoreEmulatorHost: string;
-  gcsApiEndpoint: string;
   nodeEnv: string;
   port: number;
   defaultLocale: string;
@@ -34,8 +31,6 @@ interface Config {
 
 const config: Config = {
   projectId: envVars.PROJECT_ID,
-  firestoreEmulatorHost: envVars.FIRESTORE_EMULATOR_HOST,
-  gcsApiEndpoint: envVars.GCS_EMULATOR_HOST,
   port: envVars.PORT,
   defaultLocale: envVars.DEFAULT_LOCALE,
   nodeEnv: envVars.NODE_ENV,

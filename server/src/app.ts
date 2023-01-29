@@ -27,7 +27,6 @@ const firestore = new Firestore({
 
 const storage = new Storage({
   projectId: config.projectId,
-  apiEndpoint: config.gcsApiEndpoint,
 });
 
 const translationServiceClient = new TranslationServiceClient({
