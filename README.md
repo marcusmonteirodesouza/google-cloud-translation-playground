@@ -2,7 +2,34 @@
 
 A copy of [Google Translate](https://translate.google.ca/?sl=auto&tl=en&op=docs)'s page for translating documents, with the addition that plain text files can also be translated.
 
+## System Overview
+
+## Architecture Diagram
+
 ![system architecture diagram](./images/system-architecture-diagram.png)
+
+## Components
+
+### [Server](./server)
+
+A [Node.js](https://nodejs.org) server written using [Express](https://expressjs.com/) and [socket.io](https://socket.io/), running on [Cloud Run](https://cloud.google.com/run/docs/overview/what-is-cloud-run). It:
+
+1. Receives the translation request, creates a "translation job" record in [Firestore](https://firebase.google.com/docs/firestore).
+1. Uploads the file to the [Cloud Storage bucket](https://cloud.google.com/storage/docs/buckets) to trigger a translation.
+1. After the "translation job" has started, it connects to clients via [socket.io](https://socket.io/docs/v4/) to keep them updated about the "translation job's" status. To figure out that status, it gets [realtime updates](https://firebase.google.com/docs/firestore/query-data/listen) about the corresponding document.
+1. It provides a route for the user to downlod the translated document when the job is done.
+
+### [Translate Document Cloud Function](./cloud-functions/translate-document)
+
+A [Cloud Function](https://cloud.google.com/functions/docs/concepts/overview) triggered by [files being created in a GCS bucket](https://cloud.google.com/functions/docs/calling/storage). It:
+
+1. Uses the [Cloud Translation API](https://cloud.google.com/translate/docs/reference/rest) to translate the document.
+1. Uploads the translated file to another GCS bucket.
+1. Updates the "translation job's" status.
+
+### [UI](./server/ui)
+
+An user interface written using [React](https://reactjs.org/), bootstrapped with [create-react-app](https://create-react-app.dev/). It uses [bulma](https://react-bulma.dev/en) as the main provider of components.
 
 ## Deployment
 
