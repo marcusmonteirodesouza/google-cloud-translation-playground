@@ -2,6 +2,10 @@
 
 A copy of [Google Translate](https://translate.google.ca/?sl=auto&tl=en&op=docs)'s page for translating documents, with the addition that plain text files can also be translated.
 
+
+https://user-images.githubusercontent.com/39467648/215362445-b0b5c081-22ce-4f43-9595-c244c26124de.mp4
+
+
 ## System Overview
 
 ## Architecture Diagram
