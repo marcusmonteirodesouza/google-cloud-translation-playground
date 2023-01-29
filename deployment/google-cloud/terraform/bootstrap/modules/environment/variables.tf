@@ -8,6 +8,11 @@ variable "region" {
   description = "The default region in which resources will be created."
 }
 
+variable "domain" {
+  type        = string
+  description = "You application's domain name."
+}
+
 variable "sourcerepo_name" {
   type        = string
   description = "The Cloud Source Repository name."

@@ -30,6 +30,7 @@ module "environment" {
 
   project_id      = module.project.project_id
   region          = var.region
+  domain          = var.domain
   sourcerepo_name = var.sourcerepo_name
   branch_name     = var.branch_name
   tfstate_bucket  = module.project.tfstate_bucket
