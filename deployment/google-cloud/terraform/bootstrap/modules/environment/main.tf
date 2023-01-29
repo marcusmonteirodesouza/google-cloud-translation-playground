@@ -3,6 +3,8 @@ locals {
 
   cloudbuild_sa_roles = [
     "roles/cloudfunctions.admin",
+    "roles/compute.loadBalancerAdmin",
+    "roles/compute.viewer",
     "roles/eventarc.admin",
     "roles/iam.serviceAccountUser",
     "roles/storage.admin"
