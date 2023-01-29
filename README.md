@@ -2,6 +2,8 @@
 
 A copy of [Google Translate](https://translate.google.ca/?sl=auto&tl=en&op=docs)'s page for translating documents, with the addition that plain text files can also be translated.
 
+![demo](./images/google-cloud-translation-playground-demo.mp4)
+
 ## System Overview
 
 ## Architecture Diagram
