@@ -1,6 +1,7 @@
 FROM node:18 AS build-env
 ADD . /app
 WORKDIR /app
+RUN npm run build:ui
 RUN \
   npm install && \
   npm run compile && \
