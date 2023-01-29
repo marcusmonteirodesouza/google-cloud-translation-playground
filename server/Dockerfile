@@ -6,6 +6,9 @@ RUN \
   npm run compile && \
   rm -rf node_modules && \
   npm install --omit-dev --ignore-scripts
+RUN \ 
+  npm run build:ui && \
+  mv src/ui build/src/ui
 
 FROM gcr.io/distroless/nodejs18-debian11
 COPY --from=build-env /app/build /app/build

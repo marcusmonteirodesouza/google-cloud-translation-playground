@@ -26,9 +26,15 @@ resource "google_storage_bucket" "translated_documents" {
 }
 
 # Server
+resource "google_compute_global_address" "server_https_lb" {
+  name = "server-https-lb-address"
+}
+
 module "server" {
   source                          = "./modules/server"
   region                          = var.region
+  https_lb_ip_address             = join("", google_compute_global_address.server_https_lb.*.address)
+  domain                          = var.domain
   server_image                    = var.server_image
   translate_documents_gcs_bucket  = google_storage_bucket.translate_documents.name
   translated_documents_gcs_bucket = google_storage_bucket.translated_documents.name

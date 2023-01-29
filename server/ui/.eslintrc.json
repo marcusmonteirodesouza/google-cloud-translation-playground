@@ -1,0 +1,10 @@
+{
+  "extends": ["eslint:recommended", "react-app", "plugin:prettier/recommended"],
+  "env": {
+    "browser": true,
+    "es2022": true
+  },
+  "parserOptions": {
+    "ecmaVersion": 2022
+  }
+}

@@ -20,7 +20,7 @@ resource "google_cloud_run_service" "server" {
           value = "storage.googleapis.com"
         }
         env {
-          name = "NODE_ENV"
+          name  = "NODE_ENV"
           value = "production"
         }
         env {
@@ -35,12 +35,11 @@ resource "google_cloud_run_service" "server" {
     }
   }
 
-  # TODO(Marcus): Uncomment when implementing the Load Balancer
-  # metadata {
-  #   annotations = {
-  #     "run.googleapis.com/ingress" = "internal-and-cloud-load-balancing"
-  #   }
-  # }
+  metadata {
+    annotations = {
+      "run.googleapis.com/ingress" = "internal-and-cloud-load-balancing"
+    }
+  }
 }
 
 resource "google_cloud_run_service_iam_member" "allow_unauthenticated" {
@@ -49,4 +48,53 @@ resource "google_cloud_run_service_iam_member" "allow_unauthenticated" {
   service  = google_cloud_run_service.server.name
   role     = "roles/run.invoker"
   member   = "allUsers"
+}
+
+resource "google_compute_region_network_endpoint_group" "serverless_neg" {
+  provider              = google-beta
+  name                  = "server-neg"
+  region                = var.region
+  network_endpoint_type = "SERVERLESS"
+  cloud_run {
+    service = google_cloud_run_service.server.name
+  }
+}
+
+module "https_lb" {
+  source         = "GoogleCloudPlatform/lb-http/google//modules/serverless_negs"
+  version        = "~> 6.2.0"
+  name           = "server-https-lb"
+  project        = data.google_project.project.project_id
+  address        = var.https_lb_ip_address
+  create_address = false
+
+  ssl                             = true
+  managed_ssl_certificate_domains = [var.domain]
+  https_redirect                  = true
+
+  backends = {
+    default = {
+      description = null
+      groups = [
+        {
+          group = google_compute_region_network_endpoint_group.serverless_neg.id
+        }
+      ]
+      enable_cdn              = false
+      security_policy         = null
+      custom_request_headers  = null
+      custom_response_headers = null
+
+      iap_config = {
+        enable               = false
+        oauth2_client_id     = null
+        oauth2_client_secret = null
+      }
+
+      log_config = {
+        enable      = false
+        sample_rate = null
+      }
+    }
+  }
 }

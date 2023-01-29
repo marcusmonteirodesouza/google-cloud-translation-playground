@@ -1,0 +1,7 @@
+project_id      = "my-project-id"
+folder_id       = ""
+billing_account = ""
+region          = "northamerica-northeast1"
+domain          = "google-cloud-translation-playground.my-domain.com"
+sourcerepo_name = ""
+branch_name     = "main"

@@ -38,11 +38,29 @@ functions.cloudEvent('translateDocument', async (cloudEvent) => {
     envVars.TRANSLATED_DOCUMENTS_GCS_BUCKET
   );
 
-  const translationJobId = file.name;
+  const translationJobId = translationsService.getTranslationJobId(file.name);
 
   console.log('executing translation job:', translationJobId);
 
-  await translationsService.executeTranslationJob(file.name);
+  try {
+    await translationsService.executeTranslationJob(
+      file.name,
+      file.contentType
+    );
+  } catch (err) {
+    try {
+      await translationsService.updateTranslationJobStatus(
+        translationJobId,
+        'Error'
+      );
+    } catch (updateTranslationJobStatusErr) {
+      console.error(
+        'updateTranslationJobStatusErr',
+        updateTranslationJobStatusErr
+      );
+    }
+    throw err;
+  }
 
   console.log(`translation job ${translationJobId} executed!`);
 });

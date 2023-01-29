@@ -1,7 +1,9 @@
 import path from 'path';
+import {pipeline} from 'stream/promises';
 import stream from 'stream';
 import {Firestore} from '@google-cloud/firestore';
 import {Storage} from '@google-cloud/storage';
+import {TranslationServiceClient} from '@google-cloud/translate';
 import {TranslationJob} from './translation-job';
 import {TranslationJobStatus} from './translation-job-status';
 import {NotFoundError} from '../errors';
@@ -9,6 +11,7 @@ import {NotFoundError} from '../errors';
 interface TranslationsServiceDeps {
   firestore: Firestore;
   storage: Storage;
+  translationServiceClient: TranslationServiceClient;
   translateDocumentsGCSBucket: string;
   translatedDocumentsGCSBucket: string;
 }
@@ -22,6 +25,7 @@ interface CreateTranslationJobArgs {
 class TranslationsService {
   private readonly firestore: Firestore;
   private readonly storage: Storage;
+  private readonly translationServiceClient: TranslationServiceClient;
   private readonly translateDocumentsGCSBucket: string;
   private readonly translatedDocumentsGCSBucket: string;
 
@@ -30,8 +34,28 @@ class TranslationsService {
   constructor(deps: TranslationsServiceDeps) {
     this.firestore = deps.firestore;
     this.storage = deps.storage;
+    this.translationServiceClient = deps.translationServiceClient;
     this.translateDocumentsGCSBucket = deps.translateDocumentsGCSBucket;
     this.translatedDocumentsGCSBucket = deps.translatedDocumentsGCSBucket;
+  }
+
+  async getSupportedLanguages(displayLanguageCode: string) {
+    const projectId = await this.translationServiceClient.getProjectId();
+
+    const [supportedLanguages] =
+      await this.translationServiceClient.getSupportedLanguages({
+        parent: this.translationServiceClient.locationPath(projectId, 'global'),
+        displayLanguageCode,
+      });
+
+    return supportedLanguages.languages
+      ?.filter(language => language.supportTarget)
+      .map(language => {
+        return {
+          languageCode: language.languageCode,
+          displayName: language.displayName,
+        };
+      });
   }
 
   async createTranslationJob(
@@ -66,9 +90,7 @@ class TranslationsService {
     passthroughStream.write(createTranslationJobArgs.data);
     passthroughStream.end();
 
-    passthroughStream.pipe(gcsFile.createWriteStream()).on('finish', () => {
-      // The file upload is complete
-    });
+    await pipeline(passthroughStream, gcsFile.createWriteStream());
 
     console.log(`${gcsFile.name} uploaded to ${gcsBucket.name}!`);
 
@@ -81,9 +103,9 @@ class TranslationsService {
   async getTranslationJob(
     translationJobId: string
   ): Promise<TranslationJob | undefined> {
-    const translationJobDoc = await this.firestore
-      .doc(`${this.translationJobsCollection}/${translationJobId}`)
-      .get();
+    const translationJobDoc = await this.getTranslationJobDoc(
+      translationJobId
+    ).get();
 
     const translationJobDocData = translationJobDoc.data();
 
@@ -100,6 +122,12 @@ class TranslationsService {
     };
   }
 
+  getTranslationJobDoc(translationJobId: string) {
+    return this.firestore.doc(
+      `${this.translationJobsCollection}/${translationJobId}`
+    );
+  }
+
   async getTranslatedFile(translationJobId: string) {
     const translationJob = await this.getTranslationJob(translationJobId);
 
@@ -113,16 +141,23 @@ class TranslationsService {
       );
     }
 
+    const parsedFileName = path.parse(translationJob.fileName);
+
+    const gcsBucketTranslatedFileName = `${translationJobId}${parsedFileName.ext}`;
+
     const [file] = await this.storage
       .bucket(this.translatedDocumentsGCSBucket)
-      .file(translationJob.translatedFileName)
+      .file(gcsBucketTranslatedFileName)
       .get();
 
     if (!(await file.exists())) {
       throw new NotFoundError('file does not exist');
     }
 
-    return file;
+    return {
+      file,
+      translatedFileName: translationJob.translatedFileName,
+    };
   }
 }
 

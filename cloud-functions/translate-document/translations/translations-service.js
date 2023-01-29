@@ -1,4 +1,5 @@
 const path = require('path');
+const { pipeline } = require('stream/promises');
 const stream = require('stream');
 const { Firestore } = require('@google-cloud/firestore'); // eslint-disable-line no-unused-vars
 const { Storage } = require('@google-cloud/storage'); // eslint-disable-line no-unused-vars
@@ -12,6 +13,7 @@ class TranslationsService {
   #translateDocumentsGCSBucket;
   #translatedDocumentsGCSBucket;
   #translationJobsCollection = 'translation-jobs';
+  #textTranslationContentTypes = ['text/plain', 'text/html'];
 
   /**
    * Creates a TranslationJobService instance
@@ -39,10 +41,8 @@ class TranslationsService {
    * Executes a Translation Job.
    * @param {string} fileName
    */
-  async executeTranslationJob(fileName) {
-    const parsedFileName = path.parse(fileName);
-
-    const translationJobId = parsedFileName.name;
+  async executeTranslationJob(fileName, contentType) {
+    const translationJobId = this.getTranslationJobId(fileName);
 
     const translationJobDocRef = this.#firestore.doc(
       `${this.#translationJobsCollection}/${translationJobId}`
@@ -54,32 +54,72 @@ class TranslationsService {
       throw new NotFoundError(`translation job ${translationJobId} not found`);
     }
 
-    await this.translateAndUploadFile(
-      fileName,
-      translationJobDocData.translatedFileName,
-      translationJobDocData.targetLanguageCode
+    let translatedDocumentStream;
+
+    if (this.#textTranslationContentTypes.includes(contentType)) {
+      translatedDocumentStream = await this.#translateText(
+        fileName,
+        contentType,
+        translationJobDocData.targetLanguageCode
+      );
+    } else {
+      translatedDocumentStream = await this.#translateDocument(
+        fileName,
+        translationJobDocData.targetLanguageCode
+      );
+    }
+
+    await this.#uploadFile(fileName, translatedDocumentStream);
+
+    await this.updateTranslationJobStatus(translationJobId, 'Done');
+  }
+
+  getTranslationJobId(fileName) {
+    const parsedFileName = path.parse(fileName);
+
+    return parsedFileName.name;
+  }
+
+  async updateTranslationJobStatus(translationJobId, status) {
+    const translationJobDocRef = this.#firestore.doc(
+      `${this.#translationJobsCollection}/${translationJobId}`
     );
 
     await translationJobDocRef.update({
-      status: 'Done',
+      status,
     });
   }
 
-  async translateAndUploadFile(
-    fileName,
-    translatedFileName,
-    targetLanguageCode
-  ) {
+  async #translateText(fileName, contentType, targetLanguageCode) {
     const projectId = await this.#translationServiceClient.getProjectId();
 
-    const content = (
-      await this.#storage
-        .bucket(this.#translateDocumentsGCSBucket)
-        .file(fileName)
-        .download()
-    ).toString();
+    const contents = await this.#downloadFileContents(fileName);
 
-    const sourceLanguageCode = await this.#detectLanguage(content);
+    const sourceLanguageCode = await this.#detectLanguage(contents);
+
+    const [translateTextResponse] =
+      await this.#translationServiceClient.translateText({
+        parent: this.#translationServiceClient.locationPath(
+          projectId,
+          'global'
+        ),
+        contents: [contents],
+        mimeType: contentType,
+        sourceLanguageCode,
+        targetLanguageCode,
+      });
+
+    const translatedText = translateTextResponse.translations[0].translatedText;
+
+    return new TextEncoder().encode(translatedText);
+  }
+
+  async #translateDocument(fileName, targetLanguageCode) {
+    const projectId = await this.#translationServiceClient.getProjectId();
+
+    const contents = await this.#downloadFileContents(fileName);
+
+    const sourceLanguageCode = await this.#detectLanguage(contents);
 
     const [translateDocumentResponse] =
       await this.#translationServiceClient.translateDocument({
@@ -96,21 +136,7 @@ class TranslationsService {
         targetLanguageCode,
       });
 
-    const translatedDocumentFile = this.#storage
-      .bucket(this.#translatedDocumentsGCSBucket)
-      .file(translatedFileName);
-
-    const passthroughStream = new stream.PassThrough();
-    passthroughStream.write(
-      translateDocumentResponse.documentTranslation.byteStreamOutputs[0]
-    );
-    passthroughStream.end();
-
-    passthroughStream
-      .pipe(translatedDocumentFile.createWriteStream())
-      .on('finish', () => {
-        // The file upload is complete
-      });
+    return translateDocumentResponse.documentTranslation.byteStreamOutputs[0];
   }
 
   async #detectLanguage(content) {
@@ -127,9 +153,35 @@ class TranslationsService {
 
     const languageCode = detectLanguageResponse.languages.reduce(
       (prev, current) => (prev.confidence > current.confidence ? prev : current)
-    )['languageCode'];
+    ).languageCode;
 
     return languageCode;
+  }
+
+  async #downloadFileContents(fileName) {
+    const content = (
+      await this.#storage
+        .bucket(this.#translateDocumentsGCSBucket)
+        .file(fileName)
+        .download()
+    ).toString();
+
+    return content;
+  }
+
+  async #uploadFile(translatedFileName, translatedDocumentStream) {
+    const translatedDocumentFile = this.#storage
+      .bucket(this.#translatedDocumentsGCSBucket)
+      .file(translatedFileName);
+
+    const passthroughStream = new stream.PassThrough();
+    passthroughStream.write(translatedDocumentStream);
+    passthroughStream.end();
+
+    await pipeline(
+      passthroughStream,
+      translatedDocumentFile.createWriteStream()
+    );
   }
 }
 

@@ -1,7 +1,13 @@
+import http from 'http';
+import path from 'path';
 import express from 'express';
+import cors from 'cors';
 import fileUpload from 'express-fileupload';
+import locale from 'locale';
+import {Server} from 'socket.io';
 import {Firestore} from '@google-cloud/firestore';
 import {Storage} from '@google-cloud/storage';
+import {TranslationServiceClient} from '@google-cloud/translate';
 import {TranslationsService, TranslationsRouter} from './translations';
 import {errorHandler} from './error-handler';
 import {config} from './config';
@@ -10,7 +16,11 @@ const app = express();
 
 app.use(express.json());
 
+app.use(cors());
+
 app.use(fileUpload());
+
+app.use(locale([], config.defaultLocale));
 
 const firestore = new Firestore({
   projectId: config.projectId,
@@ -18,19 +28,29 @@ const firestore = new Firestore({
 
 const storage = new Storage({
   projectId: config.projectId,
-  apiEndpoint: config.gcsApiEndpoint,
+});
+
+const translationServiceClient = new TranslationServiceClient({
+  projectId: config.projectId,
 });
 
 const translationsService = new TranslationsService({
   firestore,
   storage,
+  translationServiceClient,
   translateDocumentsGCSBucket: config.translateDocumentsGCSBucket,
   translatedDocumentsGCSBucket: config.translatedDocumentsGCSBucket,
 });
 
-const translationsRouter = new TranslationsRouter(translationsService).router;
+const translationsRouter = new TranslationsRouter(translationsService);
 
-app.use(translationsRouter);
+app.use(express.static(path.resolve(__dirname, 'ui')));
+
+app.use('/api/v1', translationsRouter.router);
+
+app.get('*', (_req, res) => {
+  res.sendFile(path.resolve(__dirname, 'ui', 'index.html'));
+});
 
 app.use(
   async (
@@ -44,4 +64,16 @@ app.use(
   }
 );
 
-export {app};
+const server = http.createServer(app);
+
+const io = new Server(server, {
+  cors: {
+    origin: '*',
+  },
+});
+
+io.on('connection', socket => {
+  translationsRouter.registerSocket(socket);
+});
+
+export {server};

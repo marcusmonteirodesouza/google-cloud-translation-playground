@@ -1,10 +1,68 @@
 import {Router} from 'express';
+import {Socket} from 'socket.io';
 import {celebrate, Joi, Segments} from 'celebrate';
 import {StatusCodes} from 'http-status-codes';
 import {TranslationsService} from './translations-service';
+import {TranslationJob} from './translation-job';
+import {TranslationJobStatus} from './translation-job-status';
 
 class TranslationsRouter {
+  private readonly ioSockets: string[] = [];
+
   constructor(private readonly translationService: TranslationsService) {}
+
+  registerSocket(socket: Socket) {
+    socket.on('translation-job-updates', async translationJobId => {
+      console.log(
+        `registering socket ${socket.id} to receive updates for translation job ${translationJobId}...`
+      );
+
+      const translationJobDoc =
+        this.translationService.getTranslationJobDoc(translationJobId);
+
+      console.log(
+        `registering observer for translation job ${translationJobId}, to emit to socket at ip ${socket.handshake.address}...`
+      );
+
+      const translationJobObserver = translationJobDoc.onSnapshot(snapshot => {
+        console.log(
+          `received snapshot for translation job ${translationJobId}, to emit to socket at ip ${socket.handshake.address}`
+        );
+
+        const translationJobData = snapshot.data();
+
+        if (!translationJobData) {
+          throw new Error(`no data in the ${translationJobId} snapshot`);
+        }
+
+        const translationJob: TranslationJob = {
+          id: snapshot.id,
+          status: translationJobData.status,
+          targetLanguageCode: translationJobData.targetLanguageCode,
+          fileName: translationJobData.fileName,
+          translatedFileName: translationJobData.translatedFileName,
+        };
+
+        if (translationJob.status === TranslationJobStatus.Done) {
+          translationJob.downloadUrl = `/api/v1/translation-jobs/${translationJob.id}/download`;
+        }
+
+        console.log(
+          `emitting translation job ${translationJob.id} update to socket at ip ${socket.handshake.address}`,
+          translationJob
+        );
+
+        socket.emit('translation-job-updates', translationJob);
+      });
+
+      socket.on('disconnect', () => {
+        console.log(
+          `closing observer for translation job ${translationJobId}, to emit to socket at ip ${socket.handshake.address}...`
+        );
+        translationJobObserver();
+      });
+    });
+  }
 
   get router() {
     const router = Router();
@@ -53,15 +111,12 @@ class TranslationsRouter {
       }
     );
 
-    router.get('/translation-jobs/:id', async (req, res, next) => {
+    router.get('/supported-languages', async (req, res, next) => {
       try {
-        const {id: translationJobId} = req.params;
+        const supportedLanguages =
+          await this.translationService.getSupportedLanguages(req.locale);
 
-        const translationJob = await this.translationService.getTranslationJob(
-          translationJobId
-        );
-
-        return res.json(translationJob);
+        return res.json(supportedLanguages);
       } catch (err) {
         return next(err);
       }
@@ -75,13 +130,13 @@ class TranslationsRouter {
           translationJobId
         );
 
-        res.setHeader('Content-Type', translatedFile.metadata['contentType']);
+        res.setHeader('Content-Type', translatedFile.file.metadata.contentType);
         res.setHeader(
           'Content-Disposition',
-          `attachment; filename="${translatedFile.name}"`
+          `attachment; filename="${translatedFile.translatedFileName}"`
         );
 
-        translatedFile
+        translatedFile.file
           .createReadStream()
           .on('error', err => {
             throw err;

@@ -6,6 +6,7 @@ interface TranslationJob {
   targetLanguageCode: string;
   fileName: string;
   translatedFileName: string;
+  downloadUrl?: string;
 }
 
 export {TranslationJob};
