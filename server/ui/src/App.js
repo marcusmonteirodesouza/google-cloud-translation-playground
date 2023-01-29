@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { io } from 'socket.io-client';
 import { Button, Content, Form, Hero, Icon } from 'react-bulma-components';
 import { translationsService } from './api/translations';
-import { config } from './config';
 
 function App() {
   const [file, setFile] = useState(null);
@@ -42,7 +41,7 @@ function App() {
 
     setTranslateJobStatus('InProgress');
 
-    const socket = io(config.apiBaseUrl);
+    const socket = io();
 
     console.log('emitting translation-job-updates', translationJob.id);
 
@@ -52,9 +51,7 @@ function App() {
       if (translationJobUpdate.status === 'Done') {
         socket.disconnect();
         setTranslateJobStatus(translationJobUpdate.status);
-        setTranslatedFileUrl(
-          translationsService.getTranslatedFileUrl(translationJobUpdate.id)
-        );
+        setTranslatedFileUrl(translationJobUpdate.downloadUrl);
       }
     });
   };

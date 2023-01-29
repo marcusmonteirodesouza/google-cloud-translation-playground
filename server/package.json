@@ -10,6 +10,7 @@
     "clean": "gts clean",
     "compile": "tsc",
     "test": "echo \"Error: no test specified\" && exit 1",
+    "build:ui": "cd ui && npm run build && cd .. && rm -rf src/ui && mv ui/build src/ui",
     "start": "nodemon --watch 'src/**/*.ts' --exec \"ts-node\" -r dotenv-expand/config src/index.ts",
     "prepare": "npm run compile"
   },

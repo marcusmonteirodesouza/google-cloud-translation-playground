@@ -7,7 +7,6 @@ const envVarsSchema = Joi.object()
     NODE_ENV: Joi.string()
       .valid('development', 'test', 'production')
       .required(),
-    PORT: Joi.number().integer().required(),
     DEFAULT_LOCALE: Joi.string().default('en'),
     TRANSLATE_DOCUMENTS_GCS_BUCKET: Joi.string().required(),
     TRANSLATED_DOCUMENTS_GCS_BUCKET: Joi.string().required(),
@@ -31,7 +30,7 @@ interface Config {
 
 const config: Config = {
   projectId: envVars.PROJECT_ID,
-  port: envVars.PORT,
+  port: 8080,
   defaultLocale: envVars.DEFAULT_LOCALE,
   nodeEnv: envVars.NODE_ENV,
   translateDocumentsGCSBucket: envVars.TRANSLATE_DOCUMENTS_GCS_BUCKET,

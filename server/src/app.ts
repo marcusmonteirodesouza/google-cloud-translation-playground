@@ -1,4 +1,5 @@
 import http from 'http';
+import path from 'path';
 import express from 'express';
 import cors from 'cors';
 import fileUpload from 'express-fileupload';
@@ -43,7 +44,13 @@ const translationsService = new TranslationsService({
 
 const translationsRouter = new TranslationsRouter(translationsService);
 
-app.use(translationsRouter.router);
+app.use(express.static(path.resolve(__dirname, 'ui')));
+
+app.use('/api/v1', translationsRouter.router);
+
+app.get('*', (_req, res) => {
+  res.sendFile(path.resolve(__dirname, 'ui', 'index.html'));
+});
 
 app.use(
   async (

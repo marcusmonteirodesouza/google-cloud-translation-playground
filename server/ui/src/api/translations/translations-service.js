@@ -1,17 +1,10 @@
 import { ApiError } from '../errors';
-import { config } from '../../config';
 import { TranslationJob } from './translation-job';
 import { SupportedLanguage } from './supported-language';
 
 class TranslationsService {
-  #apiBaseUrl;
-
-  constructor(apiBaseUrl) {
-    this.#apiBaseUrl = apiBaseUrl;
-  }
-
   async getSupportedLanguages() {
-    const url = `${this.#apiBaseUrl}/supported-languages`;
+    const url = '/api/v1/supported-languages';
 
     const response = await fetch(url);
 
@@ -31,7 +24,7 @@ class TranslationsService {
   }
 
   async createTranslationJob(file, targetLanguageCode) {
-    const url = `${this.#apiBaseUrl}/translation-jobs`;
+    const url = '/api/v1/translation-jobs';
 
     const formData = new FormData();
 
@@ -57,12 +50,8 @@ class TranslationsService {
       throw new ApiError(errorResponse.message);
     }
   }
-
-  getTranslatedFileUrl(translationJobId) {
-    return `${this.#apiBaseUrl}/translation-jobs/${translationJobId}/download`;
-  }
 }
 
-const translationsService = new TranslationsService(config.apiBaseUrl);
+const translationsService = new TranslationsService();
 
 export { translationsService };

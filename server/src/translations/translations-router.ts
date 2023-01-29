@@ -4,6 +4,7 @@ import {celebrate, Joi, Segments} from 'celebrate';
 import {StatusCodes} from 'http-status-codes';
 import {TranslationsService} from './translations-service';
 import {TranslationJob} from './translation-job';
+import {TranslationJobStatus} from './translation-job-status';
 
 class TranslationsRouter {
   private readonly ioSockets: string[] = [];
@@ -41,6 +42,10 @@ class TranslationsRouter {
           fileName: translationJobData.fileName,
           translatedFileName: translationJobData.translatedFileName,
         };
+
+        if (translationJob.status === TranslationJobStatus.Done) {
+          translationJob.downloadUrl = `/api/v1/translation-jobs/${translationJob.id}/download`;
+        }
 
         console.log(
           `emitting translation job ${translationJob.id} update to socket at ip ${socket.handshake.address}`,
