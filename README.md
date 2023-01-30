@@ -35,6 +35,13 @@ A [Cloud Function](https://cloud.google.com/functions/docs/concepts/overview) tr
 
 An user interface written using [React](https://reactjs.org/), bootstrapped with [create-react-app](https://create-react-app.dev/). It uses [bulma](https://react-bulma.dev/en) as the main provider of components.
 
+## Costs
+
+Be aware of the costs incurred by the running system, in particular:
+
+1. [Cloud Load Balancing](https://cloud.google.com/vpc/network-pricing#lb)
+1. [Translation API](https://cloud.google.com/translate/pricing). This system makes use of the `Cloud Translation - Advanced` features.
+
 ## Deployment
 
 The system is deployed using [`terraform`](https://www.terraform.io/), running in [Cloud Build](https://cloud.google.com/build/docs/overview).
