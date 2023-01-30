@@ -68,6 +68,7 @@ This is the process that creates the Google Cloud [Project](https://cloud.google
 1. Run `terraform init` and answer `yes`.
 1. [Create a Cloud Source Repository](https://cloud.google.com/source-repositories/docs/creating-an-empty-repository#gcloud) in the project your just created. Optionally, [fork this repository](https://docs.github.com/en/get-started/quickstart/fork-a-repo) and create a Cloud Source Repository by [mirroring your forked repo](https://cloud.google.com/source-repositories/docs/mirroring-a-github-repository). Update the `sourcerepo_name` variable with the repository name.
 1. Run `terraform apply`.
+1. If you have errors related to granting permissions to the [Google Storage Service Agent](https://cloud.google.com/iam/docs/service-agents), you can go to your project's Google Cloud console, then go to Cloud Storage -> Settings and check for the presence of the Service Agent. Then re-run `terraform apply`.
 
 ### Deployment
 
