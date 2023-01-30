@@ -10,12 +10,12 @@ steps:
     name: "gcr.io/cloud-builders/docker"
     args: ["push", "${_SERVER_IMAGE_FULL}"]
     dir: server
+  # Translate Document Cloud Function
   - id: translate-document-cloud-function-zip
     name: gcr.io/$PROJECT_ID/zip
     args: ["-r", "translate-document-cloud-function.zip", "."]
     dir: cloud-functions/translate-document
     waitFor: ["-"]
-  # Translate Document Cloud Function
   - id: translate-document-cloud-function-upload
     name: gcr.io/cloud-builders/gcloud
     args:
