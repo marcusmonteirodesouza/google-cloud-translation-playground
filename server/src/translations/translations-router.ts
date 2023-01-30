@@ -14,7 +14,7 @@ class TranslationsRouter {
   registerSocket(socket: Socket) {
     socket.on('translation-job-updates', async translationJobId => {
       console.log(
-        `registering socket ${socket.id} to receive updates for translation job ${translationJobId}...`
+        `registering socket at ip ${socket.handshake.address} to receive updates for translation job ${translationJobId}...`
       );
 
       const translationJobDoc =
